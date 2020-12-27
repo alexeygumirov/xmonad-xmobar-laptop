@@ -1,0 +1,95 @@
+#!/bin/sh
+
+PLAYBACK_STATE=$(amixer | grep "Playback" | fgrep "[off]")
+CURRENT_PLAYBACK_VOLUME=$(amixer get 'Master' | tail -n1 | cut -d'[' -f2 | cut -d'%' -f1)
+
+[ ! -e /tmp/volumexob ] && mkfifo /tmp/volumexob
+
+(tail -f /tmp/volumexob | xob -m 150 -t 2000 -s volume > /dev/null 2> /dev/null &)
+
+volumeratioshow(){
+    amixer get 'Master' | tail -n1 | cut -d'[' -f2 | cut -d'%' -f1 > /tmp/volumexob
+}
+
+
+# volumeratioshow
+
+case $1 in
+    -up)
+        if [ ! -z "$PLAYBACK_STATE" ]
+        then
+            pactl set-sink-mute @DEFAULT_SINK@ 0
+            volumeratioshow
+        fi
+        case $CURRENT_PLAYBACK_VOLUME in
+            150)
+                pactl set-sink-volume @DEFAULT_SINK@ 150%
+                echo 150 > /tmp/volumexob
+                ;;
+            14[0-9])
+                pactl set-sink-volume @DEFAULT_SINK@ 150%
+                echo 150 > /tmp/volumexob
+                ;;
+            1[0-3][0-9])
+                pactl set-sink-volume @DEFAULT_SINK@ +10%
+                volumeratioshow
+                ;;
+            [1-9][0-9])
+                pactl set-sink-volume @DEFAULT_SINK@ +10%
+                volumeratioshow
+                ;;
+            [0-9])
+                pactl set-sink-volume @DEFAULT_SINK@ +10%
+                volumeratioshow
+                ;;
+        esac
+        ;;
+    -down)
+        if [ ! -z "$PLAYBACK_STATE" ]
+        then
+            pactl set-sink-mute @DEFAULT_SINK@ 0
+            volumeratioshow
+        fi
+        case $CURRENT_PLAYBACK_VOLUME in
+            150)
+                pactl set-sink-volume @DEFAULT_SINK@ -10%
+                volumeratioshow
+                ;;
+            1[0-4][0-9])
+                pactl set-sink-volume @DEFAULT_SINK@ -10%
+                volumeratioshow
+                ;;
+            [2-9][0-9])
+                pactl set-sink-volume @DEFAULT_SINK@ -10%
+                volumeratioshow
+                ;;
+            1[1-9])
+                pactl set-sink-volume @DEFAULT_SINK@ -10%
+                volumeratioshow
+                ;;
+            10)
+                pactl set-sink-mute @DEFAULT_SINK@ 1
+                echo 0 > /tmp/volumexob
+                ;;
+            [0-9])
+                pactl set-sink-mute @DEFAULT_SINK@ 1
+                echo 0 > /tmp/volumexob
+                ;;
+        esac
+        ;;
+    -mutetoggle)
+        if [ ! -z "$PLAYBACK_STATE" ]
+        then
+            pactl set-sink-mute @DEFAULT_SINK@ 0
+            volumeratioshow
+        fi
+        if [ -z "$PLAYBACK_STATE" ]
+        then
+            pactl set-sink-mute @DEFAULT_SINK@ 1
+            echo 0 > /tmp/volumexob
+        fi
+        ;;
+esac
+
+sleep 3s
+pkill -f "tail -f /tmp/volumexob"

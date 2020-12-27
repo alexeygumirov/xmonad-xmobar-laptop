@@ -1,0 +1,44 @@
+Config {
+        font = "xft:Hack Nerd Font:style=Regular:pixelsize=16:antialias=true:hinting=light"
+       , additionalFonts = [ "xft:Font Awesome 5 Free:style=Solid:pixelsize=16:antialias=true"
+                             , "xft:Icons:pixelsize=16:antialias=true:hinting=true"
+                           ]
+       , borderColor = "black"
+       , border = NoBorder
+       , bgColor = "#1D3030"
+       , fgColor = "#F5F5DC"
+       , alpha = 245
+       , position = TopW L 100
+       , textOffset = 16 
+       , textOffsets = [17,17]
+       , iconOffset = -1 
+       , lowerOnStart = True
+       , pickBroadest = False
+       , persistent = True
+       , hideOnStart = False
+       , iconRoot = "/home/alexgum/.config/icons/"
+       , allDesktops = False
+       , overrideRedirect = True
+       , commands = [ Run UnsafeStdinReader
+                    , Run Cpu ["-t", "<fc=#9400D3><fn=1>\xf2db</fn></fc>:<total>%", "-L","3","-H","50","--normal","green","--high","red"] 150
+                    , Run Memory ["-t","<fc=#C71585><fn=1>\xf538</fn></fc>:<usedratio>%"] 150
+                    , Run Date "<fc=#ee9a00>%a %_d.%b</fc> <fc=#ffd700>%H:%M</fc>" "date" 600
+                    , Run Com "/home/alexgum/.scripts/trayer-padding.sh" [] "trayerpad" 10
+                    , Run Com "/home/alexgum/.scripts/rshift-start" ["-status"] "redshift" 300
+                    , Run Com "/home/alexgum/.scripts/battery-xmobar" [] "mybattery" 300
+                    , Run Com "/home/alexgum/.scripts/cputemp" [] "cputemp" 150
+                    , Run Com "head" ["-n1","/tmp/displaymode"] "dmode" 10
+                    , Run Com "/home/alexgum/.scripts/wgstatus-xmobar" [] "wgstatus" 10
+                    , Run Com "/home/alexgum/.scripts/mymounts" [] "mymounts" 300
+                    , Run Kbd [("us", "<icon=22xus-flag.xpm/>"),("de", "<icon=22xgermany-flag.xpm/>"),("ru", "<icon=22xrussia-flag.xpm/>")]
+                    , Run BatteryP ["BAT0"]
+                                   ["-t", "<fc=#7FFF00></fc><timeleft>"
+                                   , "-L", "10", "-H", "80"
+                                   , "-l", "red", "-h", "green"
+                                   , "--", "-o", "", "-O", ""
+                                   ] 600
+                    ]
+       , sepChar = "%"
+       , alignSep = "}{"
+       , template = " <action=`xdotool key super+alt+p`> </action> %UnsafeStdinReader% }{ <action=`xdotool key super+F6`>%dmode%</action> <fc=#FF1A1A>%mymounts% %redshift%</fc> <fc=#FFA07A>[</fc>%cpu%/%cputemp% %memory%<fc=#FFA07A>]</fc> <fc=#32CD32>%wgstatus%</fc>%mybattery%%battery% | %date% | %kbd% <action=`xdotool key super+shift+c`> </action>%trayerpad%"
+       }
