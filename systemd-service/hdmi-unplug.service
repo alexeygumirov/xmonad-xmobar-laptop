@@ -1,0 +1,11 @@
+[Unit]
+Description=HDMI Monitor unplug
+
+[Service]
+Type=simple
+RemainAfterExit=no
+User=alexgum
+ExecStart=/usr/local/bin/hdmi-unplug
+
+[Install]
+WantedBy=multi-user.target
