@@ -22,6 +22,108 @@ I use `systemd` service for the detection of the external monitor/screen attachm
 
 ## Systemd service setup
 
+Without desktop environment automatic detection of the attachment and detachment of the external monitor does not work.
+I took initial idea from here: [Arch Linux forum](https://bbs.archlinux.org/viewtopic.php?id=170294).
+In order to implement this, three things are needed:
+
+1. Script to detect monitor state and execute action
+2. Systemd service using this script
+3. UDEV rule which is triggered by the device event and launches this systemd service
+
+### 1. The script
+
+I created the script `/usr/local/bin/hdmi-unplug` with the following content:
+This script updates Xmonad or Qtile depending on the Xsession configuration.
+
+```sh
+#!/bin/sh
+
+######################################
+## /usr/local/bin/hdmi_unplug
+######################################
+X_USER=alexgum
+export DISPLAY=:0
+export XAUTHORITY=/home/$X_USER/.Xauthority
+export DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/1000/bus
+HDMI_STATUS=$(cat /sys/devices/pci0000:00/0000:00:08.1/0000:05:00.0/drm/card0/card0-HDMI-A-1/status)
+LID_STATE=$(cat /proc/acpi/button/lid/LID/state | cut -d':' -f2 | tr -d ' ')
+
+connect()
+{   
+    case $1 in
+        "open")
+            # I don't want automatic desktop extension on the output.
+            # I prefer manual switching to the desired mode.
+            xrandr --output eDP --primary --auto --output HDMI-A-0 --off
+            ;;
+        "closed")
+            xrandr --output eDP --off --output HDMI-A-0 --primary --auto
+            if [ ! -z "$(pgrep -fa Xsession | grep qtile)" ]
+            then
+                qtile-cmd -o cmd -f restart 2> /dev/null
+            fi
+            if [ ! -z "$(pgrep -fa Xsession | grep xmonad)" ]
+            then
+                echo " " > /tmp/displaymode #to display icons on Xmobar
+                echo "HDMI" >> /tmp/displaymode
+                xmonad --restart
+            fi
+            nitrogen --restore
+            ;;
+    esac
+}
+
+disconnect(){
+    xrandr --output eDP --primary --auto --output HDMI-A-0 --off
+    if [ ! -z "$(pgrep -fa Xsession | grep qtile)" ]
+    then
+        qtile-cmd -o cmd -f restart 2> /dev/null
+    fi
+    if [ ! -z "$(pgrep -fa Xsession | grep xmonad)" ]
+    then
+        echo " " > /tmp/displaymode # to display icons on Xmobar
+        echo "default" >> /tmp/displaymode
+        xmonad --restart
+    fi
+    nitrogen --restore
+}
+
+if [ "${HDMI_STATUS}" = "disconnected" ]; then
+    disconnect
+elif [ "${HDMI_STATUS}" = "connected" ]; then
+    connect "${LID_STATE}"
+fi
+
+exit
+```
+
+### 2. The Systemd service
+
+Then I created `/etc/systemd/system/hdmi-unplug.service` file with the following content:
+
+```text
+[Unit]
+Description=HDMI Monitor unplug
+
+[Service]
+Type=simple
+RemainAfterExit=no
+User=alexgum
+ExecStart=/usr/local/bin/hdmi-unplug
+
+[Install]
+WantedBy=multi-user.target
+```
+
+### 3. UDEV rule
+
+And, finally, UDEV rule `/etc/udev/rules.d/95-hdmi-unplug.rules`:
+
+```text
+# My rule to automatically unplug external HDMI monitor when disconnected
+ACTION=="change", KERNEL=="card0", SUBSYSTEM=="drm", RUN+="/usr/bin/systemctl start hdmi-unplug.service"
+```
+
 ## Xmonad.hs critical section
 
 I use `XMonad.Layout.IndependentScreens` to detect number of screens.
