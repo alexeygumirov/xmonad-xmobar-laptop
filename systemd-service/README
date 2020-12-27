@@ -1,0 +1,9 @@
+# To make it work
+
+- `hdmi-unplug` is the actual service script and shall be placed into the `/usr/local/bin/` directory.
+- `hdmi-unplug.service` is file for `systemd` and shall be placed into the `/etc/systemd/system/` directory.
+- Run `sudo systemctl enable hdmi-unplug.service`.
+
+> **Note**: Please adopt variables and parameters to your own laptop setup.
+
+When you change your `hdmi-unplug.sevice` file or your `hdmi-unplug` script - it is good to run `sudo systemctl daemon-reload` command to apply changes.
