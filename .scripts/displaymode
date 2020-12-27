@@ -14,42 +14,40 @@ twm_update(){
 
 case "${LID_STATE}" in
     "open")
-        if [ "${HDMI_CONNECTED}" = "disconnected" ]; then
-            xrandr --output eDP --primary --auto --output HDMI-A-0 --off
-            echo " " > /tmp/displaymode
-            echo "default" >> /tmp/displaymode
-            twm_update
-            exit 0
-        fi 
-        if [ "${HDMI_CONNECTED}" = "connected" ]; then
-            xrandr --output eDP --primary --auto --output HDMI-A-0 --auto --right-of eDP
-            echo "*  " > /tmp/displaymode
-            echo "eDP-HDMI" >> /tmp/displaymode
-            twm_update
-            exit 0
-        fi
+        case "${HDMI_CONNECTED}" in
+            "disconnected")
+                xrandr --output eDP --primary --auto --output HDMI-A-0 --off
+                echo " " > /tmp/displaymode
+                echo "default" >> /tmp/displaymode
+                twm_update
+                ;;
+            "connected")
+                xrandr --output eDP --primary --auto --output HDMI-A-0 --auto --right-of eDP
+                echo "*  " > /tmp/displaymode
+                echo "eDP-HDMI" >> /tmp/displaymode
+                twm_update
+        esac
         ;;
     "closed")
-        if [ "${HDMI_CONNECTED}" = "connected" ]; then
-            xrandr --output eDP --off --output HDMI-A-0 --primary --auto
-            echo " " > /tmp/displaymode
-            echo "HDMI" >> /tmp/displaymode
-            twm_update
-            exit 0
-        fi
-        if [ "${HDMI_CONNECTED}" = "disconnected" ]; then
-            xrandr --output eDP --primary --auto --output HDMI-A-0 --off
-            echo " " > /tmp/displaymode
-            echo "default" >> /tmp/displaymode
-            twm_update
-            exit 0
-        fi
+        case "${HDMI_CONNECTED}" in
+            "disconnected")
+                xrandr --output eDP --primary --auto --output HDMI-A-0 --off
+                echo " " > /tmp/displaymode
+                echo "default" >> /tmp/displaymode
+                twm_update
+                ;;
+            "connected")
+                xrandr --output eDP --off --output HDMI-A-0 --primary --auto
+                echo " " > /tmp/displaymode
+                echo "HDMI" >> /tmp/displaymode
+                twm_update
+                ;;
+        esac
         ;;
     *)
         xrandr --output eDP --primary --auto --output HDMI-A-0 --off
         echo " " > /tmp/displaymode
         echo "default" >> /tmp/displaymode
         twm_update
-        exit 0
         ;;
 esac

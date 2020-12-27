@@ -58,11 +58,6 @@ case ${SELECTED%:*} in
             twm_update
             exit 0
         fi
-        # if [ "${HDMI_CONNECTED}" = "disconnected" ]; then
-        #     default_screen
-        #     twm_update
-        #     exit 0
-        # fi
         ;;
     4)
         if [ "${HDMI_CONNECTED}" = "connected" ]; then
@@ -88,7 +83,7 @@ case ${SELECTED%:*} in
                 xrandr --output eDP --primary --auto --output HDMI-A-0 --auto --same-as eDP
                 echo " 冷" > /tmp/displaymode
                 echo "eDP-HDMI-Mirror" >> /tmp/displaymode
-                # twm_update
+                twm_update
                 exit 0
             fi
             if [ "${LID_STATE}" = "closed" ]; then
