@@ -153,4 +153,4 @@ main = do
 
 Each time when `xmobar` is restarted, it re-detects number of displays and spawns necessary number of bars.
 
-What is good, is that when display is in the **mirror** mode (`xrandr --output eDP --primary --auto --output HDMI-A-0 --auto --same-as eDP`), then `xmobar` correctly sees it as one screen only and spawns only one `xmobar` instance.
+The only exception is **mirror** mode (`xrandr --output eDP --primary --auto --output HDMI-A-0 --auto --same-as eDP`), then no `xmobar` restart is needed because I want to keep main screen `xmobar` being projected.

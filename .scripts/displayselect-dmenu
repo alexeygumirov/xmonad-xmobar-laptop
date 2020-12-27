@@ -84,7 +84,6 @@ case ${SELECTED%:*} in
                     xrandr --output eDP --primary --auto --output HDMI-A-0 --auto --same-as eDP
                     echo "來" > /tmp/displaymode
                     echo "eDP-HDMI-Mirror" >> /tmp/displaymode
-                    twm_update
                     ;;
                 "closed")
                     xrandr --output eDP --off --output HDMI-A-0 --primary --auto
