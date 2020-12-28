@@ -21,7 +21,7 @@ Config {
        , overrideRedirect = True
        , commands = [ Run UnsafeStdinReader
                     , Run Date "<fc=#ee9a00>%a %_d.%b</fc> <fc=#ffd700>%H:%M</fc>" "date" 600
-                    , Run Com "/home/alexgum/.scripts/rshift-start" ["-status"] "redshift" 300
+                    , Run Com "/home/alexgum/.scripts/rshift-start" ["-status"] "redshift" 30
                     , Run Com "/home/alexgum/.scripts/battery-xmobar" [] "mybattery" 300
                     , Run Com "head" ["-n1","/tmp/displaymode"] "dmode" 10
                     , Run Com "/home/alexgum/.scripts/wgstatus-xmobar" [] "wgstatus" 10
@@ -36,5 +36,5 @@ Config {
                     ]
        , sepChar = "%"
        , alignSep = "}{"
-       , template = "%UnsafeStdinReader% }{<action=`xdotool key super+F6`>%dmode%</action> <fc=#FF1A1A>%mymounts% %redshift%</fc> | <fc=#32CD32>%wgstatus%</fc>%mybattery%%battery% | %date% | %kbd% <action=`xdotool key super+shift+c`> </action>"
+       , template = "%UnsafeStdinReader% } <action=`xdotool key super+F6`>%dmode%</action> <action=`/home/alexgum/.scripts/mymounts -show`>%mymounts%</action> <action=`/home/alexgum/.scripts/rshift-start -switch`>%redshift%</action> <fc=#32CD32>%wgstatus%</fc>{<action=`xdotool key super+shift+c`>|   |</action> %mybattery%%battery% | %date% | <action=`xkb-switch -n`>%kbd%</action> "
        }

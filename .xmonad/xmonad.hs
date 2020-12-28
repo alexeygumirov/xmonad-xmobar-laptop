@@ -127,9 +127,6 @@ myKeys conf@(XConfig {XMonad.modMask = modm}) = M.fromList $
     -- launch dmenu_run
     , ((modm .|. shiftMask, xK_p     ), spawn "/home/alexgum/.scripts/dmenu_script")
 
-    -- launch xmenu
-    , ((modm .|. mod1Mask,  xK_p     ), spawn "/home/alexgum/.scripts/myxmenu")
-
     -- launch lastpass dmenu (Super + Alt + L)
     , ((modm .|. mod1Mask,  xK_l     ), spawn "/home/alexgum/.scripts/lastpassmenu")
 

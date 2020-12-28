@@ -24,7 +24,7 @@ Config {
                     , Run Memory ["-t","<fc=#C71585><fn=1>\xf538</fn></fc>:<usedratio>%"] 150
                     , Run Date "<fc=#ee9a00>%a %_d.%b</fc> <fc=#ffd700>%H:%M</fc>" "date" 600
                     , Run Com "/home/alexgum/.scripts/trayer-padding.sh" [] "trayerpad" 10
-                    , Run Com "/home/alexgum/.scripts/rshift-start" ["-status"] "redshift" 300
+                    , Run Com "/home/alexgum/.scripts/rshift-start" ["-status"] "redshift" 30 
                     , Run Com "/home/alexgum/.scripts/battery-xmobar" [] "mybattery" 300
                     , Run Com "/home/alexgum/.scripts/cputemp" [] "cputemp" 150
                     , Run Com "head" ["-n1","/tmp/displaymode"] "dmode" 10
@@ -40,5 +40,5 @@ Config {
                     ]
        , sepChar = "%"
        , alignSep = "}{"
-       , template = " <action=`xdotool key super+alt+p`> </action> %UnsafeStdinReader% }{ <action=`xdotool key super+F6`>%dmode%</action> <fc=#FF1A1A>%mymounts% %redshift%</fc> <fc=#FFA07A>[</fc>%cpu%/%cputemp% %memory%<fc=#FFA07A>]</fc> <fc=#32CD32>%wgstatus%</fc>%mybattery%%battery% | %date% | %kbd% <action=`xdotool key super+shift+c`> </action>%trayerpad%"
+       , template = " <action=`/home/alexgum/.scripts/myxmenu`> </action> %UnsafeStdinReader% } <action=`xdotool key super+F6`>%dmode%</action> <action=`/home/alexgum/.scripts/mymounts -show`>%mymounts%</action> <action=`/home/alexgum/.scripts/rshift-start -switch`>%redshift%</action> <fc=#32CD32>%wgstatus%</fc>{<fc=#FFA07A>[</fc>%cpu%/%cputemp% %memory%<fc=#FFA07A>]</fc> <action=`xdotool key super+shift+c`>|   |</action> %mybattery%%battery% | %date% | <action=`xkb-switch -n`>%kbd%</action> |%trayerpad%"
        }
