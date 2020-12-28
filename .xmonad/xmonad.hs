@@ -443,7 +443,6 @@ myManageHook = composeAll
     , className   =? "Xfce4-clipman-settings" --> doCenterFloat
     , className   =? "Xfce4-clipman-history" --> doCenterFloat
     , className =? "mpv"            --> doShift ( myWorkspaces !! 5)
-    , className    =? "firefox" <&&> resource =? "Toolkit" --> doFullFloat -- FF picture in picture
     , resource  =? "desktop_window" --> doIgnore
     , resource  =? "kdesktop"       --> doIgnore 
     , className =? "Xfce4-notifyd" --> doIgnore
