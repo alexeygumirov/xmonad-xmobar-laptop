@@ -36,6 +36,8 @@ common_run(){
         [ ! -z $(pgrep xidlehook) ] && pkill xidlehook
         (xidlehook --timer 1800 '/home/alexgum/.scripts/lockscript notify' "" --timer 30 '/home/alexgum/.scripts/lockscript lock' "" &)
     fi
+    /home/alexgum/.scripts/rshift-start -launch
+    /home/alexgum/.scripts/wgstatus &
     [ -x /usr/bin/imwheel ] && imwheel
 }
 

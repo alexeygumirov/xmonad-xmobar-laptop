@@ -1,0 +1,30 @@
+#!/bin/sh
+
+case "$1" in
+    "-status")
+        cat /tmp/redshift_status
+        ;;
+    "-switch")
+        if [ -x /usr/bin/redshift ]
+        then
+            if [ -z $(pgrep -f redshift) ]
+            then
+                (/usr/bin/redshift -l 52.584229:13.376416 -t 6500:4200 & )
+                [ ! -z $(pgrep -f redshift) ] && echo "<fc=#FF1A1A> </fc>" > /tmp/redshift_status
+            else
+                pkill -f redshift
+                echo " " > /tmp/redshift_status
+            fi
+        fi    
+        ;;
+    "-launch")
+        if [ -x /usr/bin/redshift ]
+        then
+            if [ -z $(pgrep -f redshift) ]
+            then
+                (/usr/bin/redshift -l 52.584229:13.376416 -t 6500:4200 & )
+                [ ! -z $(pgrep -f redshift) ] && echo "<fc=#FF1A1A> </fc>" > /tmp/redshift_status
+            fi
+        fi    
+        ;;
+esac
