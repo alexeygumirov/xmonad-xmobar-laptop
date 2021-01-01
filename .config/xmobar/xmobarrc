@@ -28,6 +28,7 @@ Config {
                     , Run Com "/home/alexgum/.scripts/battery-xmobar" [] "mybattery" 300
                     , Run Com "/home/alexgum/.scripts/cputemp" [] "cputemp" 150
                     , Run Com "head" ["-n1","/tmp/displaymode"] "dmode" 10
+                    , Run Com "/home/alexgum/.scripts/monbrightness-xmobar" [] "brightness" 50
                     , Run Com "/home/alexgum/.scripts/wgstatus-xmobar" [] "wgstatus" 10
                     , Run Com "/home/alexgum/.scripts/mymounts" [] "mymounts" 300
                     , Run Kbd [("us", "<icon=22xus-flag.xpm/>"),("de", "<icon=22xgermany-flag.xpm/>"),("ru", "<icon=22xrussia-flag.xpm/>")]
@@ -40,5 +41,5 @@ Config {
                     ]
        , sepChar = "%"
        , alignSep = "}{"
-       , template = " <action=`/home/alexgum/.scripts/myxmenu`> </action> %UnsafeStdinReader% } <action=`xdotool key super+F6`>%dmode%</action> <action=`/home/alexgum/.scripts/mymounts -show`>%mymounts%</action> <action=`/home/alexgum/.scripts/rshift-start -switch`>%redshift%</action> <fc=#32CD32>%wgstatus%</fc>{<fc=#FFA07A>[</fc>%cpu%/%cputemp% %memory%<fc=#FFA07A>]</fc> <action=`xdotool key super+shift+c`>|   |</action> %mybattery%%battery% | %date% | <action=`xkb-switch -n`>%kbd%</action> |%trayerpad%"
+       , template = " <action=`/home/alexgum/.scripts/myxmenu`> </action> %UnsafeStdinReader% } <action=`xdotool key super+F6`>%dmode%</action> %brightness%    <action=`/home/alexgum/.scripts/mymounts -show`>%mymounts%</action> <action=`/home/alexgum/.scripts/rshift-start -switch`>%redshift%</action> <fc=#32CD32>%wgstatus%</fc>{<fc=#FFA07A>[</fc>%cpu%/%cputemp% %memory%<fc=#FFA07A>]</fc> <action=`xdotool key super+shift+c`>|   |</action> %mybattery%%battery% | %date% | <action=`xkb-switch -n`>%kbd%</action> |%trayerpad%"
        }

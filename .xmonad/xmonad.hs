@@ -1,10 +1,20 @@
+--
+-- xmonad example config file.
+--
+-- A template showing all available configuration hooks,
+-- and how to override the defaults in your own xmonad.hs conf file.
+--
+-- Normally, you'd only override those defaults you care about.
+--
+
 import Data.List
 import Data.Monoid
-import Data.Map (fromList)
+-- import Data.Map (fromList)
 
 import Graphics.X11.ExtraTypes.XF86
-import Graphics.X11.Xlib
-import Graphics.X11.Xlib.Extras (getWindowAttributes, WindowAttributes, Event)
+-- import Graphics.X11.Xinerama
+-- import Graphics.X11.Xlib
+-- import Graphics.X11.Xlib.Extras (getWindowAttributes, WindowAttributes, Event)
 
 import System.Exit
 import System.Info
@@ -15,6 +25,8 @@ import XMonad hiding ((|||))
 import XMonad
 import XMonad.Actions.CycleSelectedLayouts
 import XMonad.Actions.CycleWindows
+--import XMonad.Actions.GridSelect
+--import XMonad.Actions.OnScreen
 import XMonad.Actions.SpawnOn
 import XMonad.Actions.Submap
 import XMonad.Actions.WindowBringer
@@ -36,6 +48,7 @@ import XMonad.Layout.Reflect
 import XMonad.Layout.Renamed (renamed, Rename(Replace))
 import XMonad.Layout.ResizableTile
 import XMonad.Layout.Spacing
+-- import XMonad.Layout.StackTile
 import XMonad.Layout.StateFull
 import XMonad.Layout.TwoPanePersistent
 
@@ -47,9 +60,17 @@ import XMonad.Util.SpawnOnce
 
 import qualified XMonad.StackSet as W
 import qualified Data.Map        as M
+-- For polybar
+-- import qualified DBus as D
+-- import qualified DBus.Client as D
+-- import qualified Codec.Binary.UTF8.String as UTF8
 
+-- The preferred terminal program, which is used in a binding below and by
+-- certain contrib modules.
+--
 myTerminal      = "alacritty"
 
+-- Whether focus follows the mouse pointer.
 myFocusFollowsMouse :: Bool
 myFocusFollowsMouse = True
 
@@ -60,6 +81,11 @@ myClickJustFocuses = False
 -- Width of the window border in pixels.
 --
 myBorderWidth   = 1
+
+-- modMask lets you specify which modkey you want to use. The default
+-- is mod1Mask ("left alt").  You may also consider using mod3Mask
+-- ("right alt"), which does not conflict with emacs keybindings. The
+-- "windows key" is usually mod4Mask.
 --
 myModMask       = mod4Mask
 
@@ -71,15 +97,31 @@ windowCount = gets $ Just . show . length . W.integrate' . W.stack . W.workspace
 
 ------------------------------------------------------------------------
 -- WindowBringer
--- Configuration to pass to dmenu
+-- Configuration to pass to rofi
 
-mygotoMenu = gotoMenuArgs a
+mygotoMenu = gotoMenuArgs' "rofi" a
         where
-            a = ["-fn", "Hack Nerd Font-14", "-p", "Go to:", "-l", "10", "-i", "-nb", "#696969", "-nf", "#000000", "-x", "480", "-y", "60", "-w", "960" ]
+            a = ["-dmenu","-p","Go to window","-location","0","-lines","10","-theme","Paper"]
 
-mybringMenu = bringMenuArgs a
+mybringMenu = bringMenuArgs' "rofi" a
         where
-            a = ["-fn", "Hack Nerd Font-14", "-p", "Bring:", "-l", "10", "-i", "-nb", "#696969", "-nf", "#000000", "-x", "480", "-y", "60", "-w", "960" ]
+            a = ["-dmenu","-p","Bring window","-location","0","-lines","10","-theme","Paper"]
+
+------------------------------------------------------------------------
+-- GRID SELECT
+------------------------------------------------------------------------
+-- GridSelect displays items (programs, open windows, etc.) in a 2D grid
+-- and lets the user select from it with the cursor/hjkl keys or the mouse.
+
+-- gridSelect menu layout
+-- mygridConfig  = defaultGSConfig
+--    { gs_cellheight   = 40
+--    , gs_cellwidth    = 300
+--    , gs_cellpadding  = 6
+--    , gs_originFractX = 0.5
+--    , gs_originFractY = 0.5
+--    , gs_font         = myFont
+--    }
 
 ------------------------------------------------------------------------
 -- scratchPads
@@ -93,11 +135,12 @@ scratchpads = [
         (customFloating $ W.RationalRect (0.02) (0.04) (0.96) (0.92))
 
     , NS "pavucontrol" "pavucontrol" (className =? "Pavucontrol")
-        (customFloating $ W.RationalRect (0.30) (0.25) (0.40) (0.50))
+        (customFloating $ W.RationalRect (0.63) (0.05) (0.36) (0.50))
 
     , NS "doublecmdNS" "(doublecmd -L '/home/alexgum/' -R '/home/alexgum/' --no-splas >/dev/null 2>&1 &)" (className =? "Doublecmd")
         (customFloating $ W.RationalRect (0.05) (0.05) (0.9) (0.9))
   ]
+
 
 ------------------------------------------------------------------------
 -- The default number of workspaces (virtual screens) and their names.
@@ -105,6 +148,23 @@ scratchpads = [
 -- workspace name. The number of workspaces is determined by the length
 -- of this list.
 --
+-- A tagging example:
+--
+-- > workspaces = ["web", "irc", "code" ] ++ map show [4..9]
+
+-- xmobarEscape :: String -> String
+-- xmobarEscape = concatMap doubleLts
+--   where
+--         doubleLts '<' = "<<"
+--        doubleLts x   = [x]
+
+-- myWorkspaces :: [String]
+-- myWorkspaces = clickable . (map xmobarEscape)
+--                $ ["1:Dev","2:Web","3:Talk","4:Mail","5:Sys","6:View","7:Misc","8:VM"]
+--   where
+--         clickable l = [ "<action=xdotool key super+" ++ show (n) ++ "> " ++ ws ++ " </action>" |
+--                       (i,ws) <- zip [1..8] l,
+--                       let n = i ]
 
 
 myWorkspaces = ["1:\61728 ","2:爵 ","3:\62002 ","4:\64239 ","5:\63256 ","6:\63616 ","7:\58224 ","8:\59156 ","9:\62779 "]
@@ -112,6 +172,7 @@ myWorkspaces = ["1:\61728 ","2:爵 ","3:\62002 ","4:\64239 ","5:\63256 ","6:\636
 -- Border colors for unfocused and focused windows, respectivelyscreen.
 --
 myNormalBorderColor  = "#808080"
+-- myFocusedBorderColor = "#32cd32"
 myFocusedBorderColor = "#FF8C00"
 
 ------------------------------------------------------------------------
@@ -126,6 +187,9 @@ myKeys conf@(XConfig {XMonad.modMask = modm}) = M.fromList $
 
     -- launch dmenu_run
     , ((modm .|. shiftMask, xK_p     ), spawn "/home/alexgum/.scripts/dmenu_script")
+
+    -- launch xmenu
+    -- , ((modm .|. mod1Mask,  xK_p     ), spawn "/home/alexgum/.scripts/myxmenu")
 
     -- launch lastpass dmenu (Super + Alt + L)
     , ((modm .|. mod1Mask,  xK_l     ), spawn "/home/alexgum/.scripts/lastpassmenu")
@@ -170,16 +234,16 @@ myKeys conf@(XConfig {XMonad.modMask = modm}) = M.fromList $
     , ((modm .|. shiftMask,  xK_Return), windows W.swapMaster)
     
     -- Rotate unfocused Down
-    , ((modm .|. controlMask, xK_j), rotUnfocusedDown)
+    -- , ((modm .|. controlMask, xK_u), rotUnfocusedDown)
 
     -- Rotate unfocused Up
-    , ((modm .|. controlMask, xK_k), rotUnfocusedUp)
+    -- , ((modm .|. controlMask, xK_i), rotUnfocusedUp)
 
     -- Rotate focused Down
-    , ((modm .|. controlMask, xK_u), rotFocusedDown)
+    , ((modm .|. controlMask, xK_j), rotFocusedDown)
 
     -- Rotate focused Up
-    , ((modm .|. controlMask, xK_i), rotFocusedUp)
+    , ((modm .|. controlMask, xK_k), rotFocusedUp)
 
     -- Swap the focused window with the next window
     , ((modm .|. shiftMask, xK_j     ), windows W.swapDown  )
@@ -354,6 +418,15 @@ myMouseBindings (XConfig {XMonad.modMask = modm}) = M.fromList $
 ------------------------------------------------------------------------
 -- Layouts:
 
+-- You can specify and transform your layouts by modifying these values.
+-- If you change layout bindings be sure to use 'mod-shift-space' after
+-- restarting (with 'mod-q') to reset your layout state to the new
+-- defaults, as xmonad preserves your old layout settings by default.
+--
+-- The available layouts.  Note that each layout is separated by |||,
+-- which denotes layout choice.
+--
+
 mySpacing :: Integer -> l a -> XMonad.Layout.LayoutModifier.ModifiedLayout Spacing l a
 mySpacing i = spacingRaw False (Border i i i i) True (Border i i i i) True
 
@@ -391,7 +464,19 @@ myLayout = myDefaultLayout
                           LLC.||| tiled
                           LLC.||| two
                           LLC.||| mtiled
---                        LLC.||| reflH
+                          LLC.||| reflH
+
+--      -- default tiling algorithm partitions the screen into two panes
+--      tiled   = spacing 2 $ Tall nmaster delta ratio
+-- 
+--      -- The default number of windows in the master pane
+--      nmaster = 1
+-- 
+--      -- Default proportion of screen occupied by master pane
+--      ratio   = 1/2
+-- 
+--      -- Percent of screen to increment by when resizing panes
+--      delta   = 3/100
 
 
 ------------------------------------------------------------------------
@@ -419,8 +504,6 @@ myManageHook = composeAll
     , className =? "Thunderbird"    --> doShift ( myWorkspaces !! 3)
     , className =? "Slack"          --> doShift ( myWorkspaces !! 2)
     , className =? "Skype"          --> doShift ( myWorkspaces !! 2)
-    , ("WhatsApp" `isInfixOf`) <$> title  --> doShift ( myWorkspaces !! 2 )
-    --, ("office" `isInfixOf`) <$> wmClass --> doShift ( myWorkspaces !! 4 )
     , className =? "draw.io"        --> doShift ( myWorkspaces !! 4)
     --, className =? "firefox"        --> doShift ( myWorkspaces !! 1)
     --, className =? "Gscan2pdf"      --> doShift ( myWorkspaces !! 6)
@@ -432,40 +515,55 @@ myManageHook = composeAll
     --, className =? "Slack"          --> doFloat
     , title     =? "Volume Control" --> doCenterFloat
     , title     =? "Administrator privileges required" --> doCenterFloat
-    , title     =? "MyDrivesMessage" --> doCenterFloat
+    , title     =? "MyDrivesMessage" --> doRectFloat (W.RationalRect 0.72 0.03 0.28 0.4)
     , title     =? "Network Connections" --> doCenterFloat
     , title     =? "vimwiki" --> doCenterFloat
     , title     =? "scratch-term"   --> doCenterFloat
     , title     =? "Xfce Power Manager"   --> doCenterFloat
     , className   =? "Doublecmd" --> doCenterFloat
-    , className   =? "SpeedCrunch" --> doCenterFloat
+    , className   =? "SpeedCrunch" --> doRectFloat (W.RationalRect 0.72 0.03 0.28 0.4)
     , className   =? "Blueman-services" --> doCenterFloat
+    , className   =? "Blueman-manager" --> doRectFloat (W.RationalRect 0.25 0.25 0.5 0.5)
+    , className   =? "Blueman-assistant" --> doRectFloat (W.RationalRect 0.25 0.25 0.5 0.5)
+    , className   =? "Blueman-sendto" --> doRectFloat (W.RationalRect 0.2 0.1 0.6 0.8)
+    , className   =? "Blueman-adapters" --> doCenterFloat
     , className   =? "Xfce4-clipman-settings" --> doCenterFloat
     , className   =? "Xfce4-clipman-history" --> doCenterFloat
     , className =? "mpv"            --> doShift ( myWorkspaces !! 5)
     , resource  =? "desktop_window" --> doIgnore
     , resource  =? "kdesktop"       --> doIgnore 
     , className =? "Xfce4-notifyd" --> doIgnore
+    -- , isFullscreen --> doFullFloat
     ]
         where
-            wmName = stringProperty "WM_NAME"
-            wmIconName = stringProperty "WM_ICON_NAME"
-            wmClass = stringProperty "WM_CLASS"
             office = ["libreoffice","libreoffice-writer","libreoffice-calc"]
 
 ------------------------------------------------------------------------
 -- Event handling
 
-myEventHook = mempty
+-- * EwmhDesktops users should change this to ewmhDesktopsEventHook
+--
+-- Defines a custom handler function for X Events. The function should
+-- return (All True) if the default handler is to be run afterwards. To
+-- combine event hooks use mappend or mconcat from Data.Monoid.
+--
+-- myEventHook = mempty
+-- myEventHook = fullscreenEventHook <+> docksEventHook
+myEventHook = fullscreenEventHook
 
 ------------------------------------------------------------------------
 -- Status bars and logging
 
+-- Perform an arbitrary action on each internal state change or X event.
+-- See the 'XMonad.Hooks.DynamicLog' extension for examples.
+--
+-- myLogHook = return ()
+
 myLogHook h = dynamicLogWithPP . namedScratchpadFilterOutWorkspacePP $ xmobarPP
     { ppOutput = hPutStrLn h
-    , ppTitle = xmobarColor "green" "" . shorten 30
+    -- , ppTitle = xmobarColor "green" "" . shorten 30
     , ppOrder = \(workspace:layout:title:extras)
-        -> [workspace,"<action=`xdotool key super+space`>",layout,"</action>","<action=`xdotool key super+j`>","<fc=#F5FFFA>#"]++extras++["</fc>","</action>",title]
+        -> [workspace,"<action=`xdotool key super+space`>",layout,"</action>","<action=`xdotool key super+j`>","<fc=#FF00FF><"]++extras++["></fc>","</action>"]
     , ppSep = " "
     , ppExtras = [windowCount]
     , ppCurrent = xmobarColor "green" "" . wrap "|" "|"
@@ -486,11 +584,16 @@ myLogHook h = dynamicLogWithPP . namedScratchpadFilterOutWorkspacePP $ xmobarPP
 ------------------------------------------------------------------------
 -- Startup hook
 
+-- Perform an arbitrary action each time xmonad starts or is restarted
+-- with mod-q.  Used by, e.g., XMonad.Layout.PerWorkspace to initialize
+-- per-workspace layout choices.
+--
+-- By default, do nothing.
 myStartupHook = do
+    -- spawn "/home/alexgum/.scripts/bar-launch"
     setWMName "LG3D"
 
 ------------------------------------------------------------------------
-
 main = do
     nScreens <- countScreens
     if nScreens == 1
@@ -533,6 +636,7 @@ defaults = def {
         startupHook        = myStartupHook
     }
 
+-- | Finally, a copy of the default bindings in simple textual tabular format.
 help :: String
 help = unlines ["The default modifier key is 'alt'. Default keybindings:",
     "",

@@ -1,0 +1,10 @@
+configuration {
+    theme: "android_notification";
+    font: "Hack Nerd Font 15";
+    location: 1;
+    line-margin: 2;
+    line-padding: 3;
+    hide-scrollbar: true;
+    matching: "fuzzy";
+    monitor: "-4";
+}
