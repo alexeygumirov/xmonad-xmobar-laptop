@@ -24,7 +24,6 @@ fi
 
 common_run(){
     /home/alexgum/.scripts/displaymode &
-    [ -x /usr/bin/picom ] && (picom -f --experimental-backends 2> /dev/null &)
     [ -x /usr/bin/nitrogen ] && (nitrogen --restore &)
     [ -x /usr/lib/xfce4/notifyd/xfce4-notifyd ] && ([ -z $(pgrep notifyd) ] && /usr/lib/xfce4/notifyd/xfce4-notifyd >/dev/null 2>&1 &)
     [ -x /usr/bin/nm-applet ] && (nm-applet 2> /dev/null &)
@@ -34,7 +33,7 @@ common_run(){
     if [ -x /usr/bin/xidlehook ]
     then
         [ ! -z $(pgrep xidlehook) ] && pkill xidlehook
-        (xidlehook --timer 1800 '/home/alexgum/.scripts/lockscript notify' "" --timer 30 '/home/alexgum/.scripts/lockscript lock' "" &)
+        (xidlehook --not-when-fullscreen --timer 900 '/home/alexgum/.scripts/lockscript notify' "" --timer 30 '/home/alexgum/.scripts/lockscript lock' "" &)
     fi
     /home/alexgum/.scripts/rshift-start -launch
     /home/alexgum/.scripts/wgstatus &
