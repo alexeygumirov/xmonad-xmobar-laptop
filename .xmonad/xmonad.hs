@@ -9,7 +9,7 @@
 
 import Data.List
 import Data.Monoid
--- import Data.Map (fromList)
+import qualified Data.Map as M
 
 import Graphics.X11.ExtraTypes.XF86
 -- import Graphics.X11.Xinerama
@@ -26,6 +26,7 @@ import XMonad
 import XMonad.Actions.CycleSelectedLayouts
 import XMonad.Actions.CycleWindows
 --import XMonad.Actions.GridSelect
+-- import XMonad.Actions.MouseResize
 --import XMonad.Actions.OnScreen
 import XMonad.Actions.SpawnOn
 import XMonad.Actions.Submap
@@ -42,6 +43,9 @@ import XMonad.Layout.LayoutModifier
 import XMonad.Layout.LimitWindows (limitWindows, increaseLimit, decreaseLimit)
 import XMonad.Layout.IndependentScreens
 import XMonad.Layout.Magnifier
+import XMonad.Layout.MultiToggle (mkToggle, single, EOT(EOT), (??))
+import qualified XMonad.Layout.MultiToggle as MT (Toggle(..))
+import XMonad.Layout.MultiToggle.Instances (StdTransformers(NBFULL, MIRROR, NOBORDERS))
 import XMonad.Layout.Named
 import XMonad.Layout.NoBorders
 import XMonad.Layout.Reflect
@@ -51,15 +55,16 @@ import XMonad.Layout.Spacing
 -- import XMonad.Layout.StackTile
 import XMonad.Layout.StateFull
 import XMonad.Layout.TwoPanePersistent
+-- import XMonad.Layout.WindowArranger
 
 import XMonad.Prompt
+
+import qualified XMonad.StackSet as W
 
 import XMonad.Util.NamedScratchpad
 import XMonad.Util.Run
 import XMonad.Util.SpawnOnce
 
-import qualified XMonad.StackSet as W
-import qualified Data.Map        as M
 -- For polybar
 -- import qualified DBus as D
 -- import qualified DBus.Client as D
@@ -213,10 +218,16 @@ myKeys conf@(XConfig {XMonad.modMask = modm}) = M.fromList $
     , ((modm,               xK_a  ), cycleThroughLayouts ["monocle","tiled"] )
 
     --  Cycle through "two and mtiled"
-    , ((modm .|. shiftMask, xK_a  ), cycleThroughLayouts ["two","mtiled"] )
+    , ((modm .|. shiftMask, xK_a  ), cycleThroughLayouts ["two","mtiled","reflH"] )
 
     -- Resize viewed windows to the correct size
     , ((modm,               xK_n     ), refresh)
+
+    -- Toggle no borders
+    , ((modm .|. shiftMask, xK_n     ), sendMessage $ MT.Toggle NOBORDERS)
+
+    -- Toggle full screen for a window
+    , ((modm,               xK_b     ), sendMessage (MT.Toggle NBFULL) >> sendMessage ToggleStruts)
 
     -- Move focus to the next window
     , ((modm,               xK_Tab   ), windows W.focusDown)
@@ -277,13 +288,13 @@ myKeys conf@(XConfig {XMonad.modMask = modm}) = M.fromList $
     -- Use this binding with avoidStruts from Hooks.ManageDocks.
     -- See also the statusBar function from Hooks.DynamicLog.
     --
-    , ((modm              , xK_b     ), sendMessage ToggleStruts)
+    , ((modm .|. shiftMask, xK_b     ), sendMessage ToggleStruts)
 
     -- Lock screen
-    , ((modm              , xK_s     ),  spawn "/home/alexgum/.scripts/lockscript twm")
+    , ((modm              , xK_s     ),  spawn "/home/alexgum/.scripts/lockscript lock")
 
     -- Lock screen picture update
-    , ((modm .|. shiftMask, xK_s     ),  spawn "/home/alexgum/.scripts/lockscreenpicture")
+    -- , ((modm .|. shiftMask, xK_s     ),  spawn "/home/alexgum/.scripts/lockscreenpicture")
 
     -- Quit xmonad
     , ((modm .|. shiftMask, xK_q     ), io (exitWith ExitSuccess))
@@ -313,7 +324,7 @@ myKeys conf@(XConfig {XMonad.modMask = modm}) = M.fromList $
     , ((modm              , xK_F6    ), spawn "/home/alexgum/.scripts/displayselect-dmenu")
 
     -- Run xmessage with a summary of the default keybindings (useful for beginners)
-    , ((modm .|. shiftMask, xK_slash ), spawn ("echo \"" ++ help ++ "\" | gxmessage -file -"))
+    , ((modm .|. shiftMask, xK_slash ), spawn ("echo \"" ++ help ++ "\" | gxmessage -timeout 10 -font 'Hack Nerd Font Mono 12' -name 'myKeyBindings' -default okay -wrap -file -"))
 
     -- Mute volume
     , ((0, xF86XK_AudioMute), spawn "/home/alexgum/.scripts/laptopvolume -mutetoggle")
@@ -458,13 +469,13 @@ two    = renamed [Replace "two"]
            $ magnifierOff
            $ TwoPanePersistent Nothing (2/100) (1/2)
 
-myLayout = myDefaultLayout
-   where
-        myDefaultLayout = monocle
-                          LLC.||| tiled
-                          LLC.||| two
-                          LLC.||| mtiled
-                          LLC.||| reflH
+myLayout = avoidStruts $ mkToggle (NBFULL ?? NOBORDERS ?? EOT) myDefaultLayout
+           where
+                myDefaultLayout = monocle
+                                  LLC.||| tiled
+                                  LLC.||| two
+                                  LLC.||| mtiled
+                                  LLC.||| reflH
 
 --      -- default tiling algorithm partitions the screen into two panes
 --      tiled   = spacing 2 $ Tall nmaster delta ratio
@@ -516,6 +527,7 @@ myManageHook = composeAll
     , title     =? "Volume Control" --> doCenterFloat
     , title     =? "Administrator privileges required" --> doCenterFloat
     , title     =? "MyDrivesMessage" --> doRectFloat (W.RationalRect 0.72 0.03 0.28 0.4)
+    , title     =? "myKeyBindings" --> doRectFloat (W.RationalRect 0.60 0.03 0.40 0.9)
     , title     =? "Network Connections" --> doCenterFloat
     , title     =? "vimwiki" --> doCenterFloat
     , title     =? "scratch-term"   --> doCenterFloat
@@ -590,7 +602,7 @@ myLogHook h = dynamicLogWithPP . namedScratchpadFilterOutWorkspacePP $ xmobarPP
 --
 -- By default, do nothing.
 myStartupHook = do
-    -- spawn "/home/alexgum/.scripts/bar-launch"
+    spawn "killall -r picom; sleep 1; picom --experimental-backends &"
     setWMName "LG3D"
 
 ------------------------------------------------------------------------
@@ -599,17 +611,17 @@ main = do
     if nScreens == 1
         then do 
             xmproc0 <- spawnPipe "xmobar -x 0 /home/alexgum/.config/xmobar/xmobarrc"
-            xmonad $ docks defaults {
-                    manageHook = manageDocks <+> namedScratchpadManageHook scratchpads <+> manageHook defaults
-                    , layoutHook = avoidStruts $ layoutHook defaults
+            xmonad $ docks $ ewmh defaults {
+                    manageHook = namedScratchpadManageHook scratchpads <+> manageHook defaults
+                    , layoutHook = layoutHook defaults
                     , logHook = myLogHook xmproc0
                     }
         else do
             xmproc0 <- spawnPipe "xmobar -x 0 /home/alexgum/.config/xmobar/xmobarrc"
             xmproc1 <- spawnPipe "xmobar -x 1 /home/alexgum/.config/xmobar/xmobarrc1"
-            xmonad $ docks defaults {
-                    manageHook = manageDocks <+> namedScratchpadManageHook scratchpads <+> manageHook defaults
-                    , layoutHook = avoidStruts $ layoutHook defaults
+            xmonad $ docks $ ewmh defaults {
+                    manageHook = namedScratchpadManageHook scratchpads <+> manageHook defaults
+                    , layoutHook = layoutHook defaults
                     , logHook = myLogHook xmproc0 >> myLogHook xmproc1
                     }
 
@@ -638,44 +650,82 @@ defaults = def {
 
 -- | Finally, a copy of the default bindings in simple textual tabular format.
 help :: String
-help = unlines ["The default modifier key is 'alt'. Default keybindings:",
+help = unlines ["The modifier key is 'Win'. Keybindings:",
     "",
-    "-- launching and killing programs",
-    "mod-Enter  Launch xterminal",
-    "mod-p            Launch dmenu",
-    "mod-Shift-p      Launch gmrun",
+    "mod-Enter        Launch terminal",
+    "mod-p            Launch my programs",
+    "mod-Shift-p      Launch dmenu run",
     "mod-Shift-c      Close/kill the focused window",
+    "mod-a            Cycle through 'Monocle' and 'Tall'",
+    "mod-Shift-a      Cycle through 'Two Pane', 'Mirror Tiled','Refl. Tall'",
     "mod-Space        Rotate through the available layout algorithms",
     "mod-Shift-Space  Reset the layouts on the current workSpace to default",
     "mod-n            Resize/refresh viewed windows to the correct size",
     "",
-    "-- move focus up or down the window stack",
-    "mod-Tab        Move focus to the next window",
-    "mod-Shift-Tab  Move focus to the previous window",
-    "mod-j          Move focus to the next window",
-    "mod-k          Move focus to the previous window",
-    "mod-m          Move focus to the master window",
+    "mod-Shift-n      Toggle No-borders for current workspace",
+    "mod-b            Toggle full screen no borders for focused window",
+    "mod-Shift-b      Toggle struts (hide/show status bar)",
+    "",
+    "mod-Alt-l      Lastpass menu",
+    "mod-/          Emojis menu - auto insert",
+    "mod-Alt-/      Emojis menu - Copy to buffer",
+    "",
+    "-- Screenshots",
+    "mod-Print,f     Fullscreen shot",
+    "mod-Print,r     Region shot",
+    "",
+    "-- Scratchpads",
+    "mod-x          Terminal",
+    "mod-v          Vimwiki",
+    "mod-f          Double Commander",
+    "mod-Shift-v    Volume control",
+    "",
+    "-- Display & media",
+    "mod-F1           Laptop display (master)",
+    "mod-F2           Laptop display (master) + HDMI (slave)",
+    "mod-F3           HDMI (master)",
+    "mod-F4           HDMI (master) + Laptop display (slave)",
+    "mod-F5           Mirror: Laptop display -> HDMI",
+    "mod-F6           Select display mode manually",
+    "mod-Control-F1   Toggle output master mute",
+    "mod-Control-F2   Master volume down",
+    "mod-Control-F3   Master volume up",
+    "mod-Control-F4   Toggle microfon mute",
+    "mod-Control-F5   Laptop screen brightness down",
+    "mod-Control-F6   Laptop screen brightness up",
+    "",
+    "mod-Tab           Move focus to the next window",
+    "mod-j             Move focus to the next window",
+    "mod-k             Move focus to the previous window",
+    "mod-m             Move focus to the master window",
+    "mod-i             Bring window menu",
+    "mod-o             Go to window menu",
     "",
     "-- modifying the window order",
-    "mod-Return   Swap the focused window and the master window",
-    "mod-Shift-j  Swap the focused window with the next window",
-    "mod-Shift-k  Swap the focused window with the previous window",
+    "mod-Shift-Enter   Swap the focused window and the master window",
+    "mod-Shift-j       Swap the focused window with the next window",
+    "mod-Shift-k       Swap the focused window with the previous window",
     "",
-    "-- resizing the master/slave ratio",
-    "mod-h  Shrink the master area",
-    "mod-l  Expand the master area",
+    "-- Two Pane modifiers",
+    "mod-Control-j     Rotate focused down (for two pane)",
+    "mod-Control-k     Rotate focused up (for two pane)",
     "",
-    "-- floating layer support",
+    "-- resizing",
+    "mod-Shift-h       Shrink the master area",
+    "mod-Shift-l       Expand the master area",
+    "mod-Control-h     Shrink focused vertically",
+    "mod-Control-l     Expand focused vertically",
+    "",
     "mod-t  Push window back into tiling; unfloat and re-tile it",
     "",
-    "-- increase or decrease number of windows in the master area",
-    "mod-comma  (mod-,)   Increment the number of windows in the master area",
-    "mod-period (mod-.)   Deincrement the number of windows in the master area",
+    "mod-,     Increment the number of windows in the master area",
+    "mod-.     Deincrement the number of windows in the master area",
     "",
     "-- quit, or restart",
-    "mod-Shift-q  Quit xmonad",
-    "mod-q        Restart xmonad",
+    "mod-Shift-q  Quit (logout)",
+    "mod-q        Restart Xmonad",
     "mod-[1..9]   Switch to workSpace N",
+    "mod-s        Lock screen",
     "",
     "-- Workspaces & screens",
     "mod-Shift-[1..9]   Move client to workspace N",
@@ -685,4 +735,6 @@ help = unlines ["The default modifier key is 'alt'. Default keybindings:",
     "-- Mouse bindings: default actions bound to mouse events",
     "mod-button1  Set the window to floating mode and move by dragging",
     "mod-button2  Raise the window to the top of the stack",
-    "mod-button3  Set the window to floating mode and resize by dragging"]
+    "mod-button3  Set the window to floating mode and resize by dragging",
+    "",
+    "mod-Shift-/  Hotkeys list"]
