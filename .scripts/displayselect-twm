@@ -1,97 +1,193 @@
-#!/bin/sh
+#!/usr/bin/sh
 
 HDMI_CONNECTED=$(cat /sys/devices/pci0000:00/0000:00:08.1/0000:05:00.0/drm/card0/card0-HDMI-A-1/status)
+DP1_CONNECTED=$(cat /sys/devices/pci0000:00/0000:00:08.1/0000:05:00.0/drm/card0/card0-DP-1/status)
+DP2_CONNECTED=$(cat /sys/devices/pci0000:00/0000:00:08.1/0000:05:00.0/drm/card0/card0-DP-2/status)
 LID_STATE=$(cat /proc/acpi/button/lid/LID/state | cut -d':' -f2 | tr -d ' ')
+DISPLAY_NAME="none"
+
+if [ "${HDMI_CONNECTED}" = "connected" ]
+then
+    DISPLAY_NAME="HDMI-A-0"
+elif [ "${DP1_CONNECTED}" = "connected" ]
+then
+    DISPLAY_NAME="DisplayPort-0"
+elif [ "${DP2_CONNECTED}" = "connected" ]
+then
+    DISPLAY_NAME="DisplayPort-1"
+fi
+
 
 twm_update(){
     case "$XDG_SESSION_DESKTOP" in
         "qtile") qtile-cmd -o cmd -f restart 2> /dev/null & ;;
         "xmonad") xmonad --restart & ;;
     esac
+    xset s off
+    xset s noblank
+    xset dpms 600 1200 2400
     nitrogen --restore &
     setxkbmap us,ru,de -option -option 'grp:rshift_toggle,caps:ctrl_modifier'
 }
 
 default_screen(){
-    xrandr --output eDP --primary --auto --output HDMI-A-0 --off
+    xrandr --output eDP --primary --auto --output HDMI-A-0 --off --output DisplayPort-0 --off --output DisplayPort-1 --off
     echo " " > /tmp/displaymode
     echo "default" >> /tmp/displaymode
 }
 
+display_only(){
+    local DISPLAY_WRITTEN=$(cat /tmp/displayname)
+    local CURRENT_MODE=$(tail -n1 /tmp/displaymode)
+    if [ "${DISPLAY_WRITTEN}" != "${DISPLAY_NAME}" -o "${CURRENT_MODE}" != "HDMI" ]; then
+        case "${DISPLAY_NAME}" in
+            "HDMI-A-0")
+                xrandr --output eDP --off --output HDMI-A-0 --primary --auto --output DisplayPort-0 --off --output DisplayPort-1 --off
+                echo "${DISPLAY_NAME}" > /tmp/displayname
+                echo " " > /tmp/displaymode
+                echo "HDMI" >> /tmp/displaymode
+                ;;
+            "DisplayPort-0")
+                xrandr --output eDP --off --output HDMI-A-0 --off --output DisplayPort-0 --primary --auto --output DisplayPort-1 --off
+                echo "${DISPLAY_NAME}" > /tmp/displayname
+                echo " " > /tmp/displaymode
+                echo "HDMI" >> /tmp/displaymode
+                ;;
+            "DisplayPort-1")
+                xrandr --output eDP --off --output HDMI-A-0 --off --output DisplayPort-0 --off --output DisplayPort-1 --primary --auto
+                echo "${DISPLAY_NAME}" > /tmp/displayname
+                echo " " > /tmp/displaymode
+                echo "HDMI" >> /tmp/displaymode
+                ;;
+        esac
+    fi
+}
+
 case $1 in
+    1) 
+        case "${LID_STATE}" in
+            "open")
+                default_screen
+                ;;
+            "closed")
+                display_only
+                ;;
+        esac
+        ;;
     2)
-        if [ "${HDMI_CONNECTED}" = "connected" ]; then
-            case "${LID_STATE}" in
-                "open")
-                    xrandr --output eDP --primary --auto --output HDMI-A-0 --auto --right-of eDP
-                    echo "*  " > /tmp/displaymode
-                    echo "eDP-HDMI" >> /tmp/displaymode
-                    twm_update
-                    ;;
-                "closed")
-                    xrandr --output eDP --off --output HDMI-A-0 --primary --auto
-                    echo " " > /tmp/displaymode
-                    echo "HDMI" >> /tmp/displaymode
-                    twm_update
-                    ;;
-            esac
-        fi
+        case "${LID_STATE}" in
+            "open")
+                DISPLAY_WRITTEN=$(cat /tmp/displayname)
+                CURRENT_MODE=$(tail -n1 /tmp/displaymode)
+                if [ "${DISPLAY_WRITTEN}" != "${DISPLAY_NAME}" -o "${CURRENT_MODE}" != "eDP-HDMI" ]; then
+                    case "${DISPLAY_NAME}" in
+                        "HDMI-A-0")
+                            xrandr --output eDP --primary --auto --output HDMI-A-0 --auto --right-of eDP --output DisplayPort-0 --off --output DisplayPort-1 --off
+                            echo "${DISPLAY_NAME}" > /tmp/displayname
+                            echo "*  " > /tmp/displaymode
+                            echo "eDP-HDMI" >> /tmp/displaymode
+                            ;;
+                        "DisplayPort-0")
+                            xrandr --output eDP --primary --auto --output HDMI-A-0 --off --output DisplayPort-0 --auto --right-of eDP --output DisplayPort-1 --off
+                            echo "${DISPLAY_NAME}" > /tmp/displayname
+                            echo "*  " > /tmp/displaymode
+                            echo "eDP-HDMI" >> /tmp/displaymode
+                            ;;
+                        "DisplayPort-1")
+                            xrandr --output eDP --primary --auto --output HDMI-A-0 --off --output DisplayPort-0 --off --output DisplayPort-1 --auto --right-of eDP
+                            echo "${DISPLAY_NAME}" > /tmp/displayname
+                            echo "*  " > /tmp/displaymode
+                            echo "eDP-HDMI" >> /tmp/displaymode
+                            ;;
+                    esac
+                fi
+                ;;
+            "closed")
+                display_only
+                ;;
+        esac
         ;;
     3)
-        if [ "${HDMI_CONNECTED}" = "connected" ]; then
-            xrandr --output eDP --off --output HDMI-A-0 --primary --auto
-            echo " " > /tmp/displaymode
-            echo "HDMI" >> /tmp/displaymode
-            twm_update
-            exit 0
-        fi
+        display_only
         ;;
     4)
-        if [ "${HDMI_CONNECTED}" = "connected" ]; then
-            case "${LID_STATE}" in
-                "open")
-                    xrandr --output HDMI-A-0 --primary --auto --output eDP --auto --right-of HDMI-A-0
-                    echo "*  " > /tmp/displaymode
-                    echo "eDP-HDMI" >> /tmp/displaymode
-                    twm_update
-                    ;;
-                "closed")
-                    xrandr --output eDP --off --output HDMI-A-0 --primary --auto
-                    echo " " > /tmp/displaymode
-                    echo "HDMI" >> /tmp/displaymode
-                    twm_update
-                    ;;
-            esac
-        fi
+        case "${LID_STATE}" in
+            "open")
+                DISPLAY_WRITTEN=$(cat /tmp/displayname)
+                CURRENT_MODE=$(tail -n1 /tmp/displaymode)
+                if [ "${DISPLAY_WRITTEN}" != "${DISPLAY_NAME}" -o "${CURRENT_MODE}" != "HDMI-eDP" ]; then
+                    case "${DISPLAY_NAME}" in
+                        "HDMI-A-0")
+                            xrandr --output eDP --auto --right-of HDMI-A-0 --output HDMI-A-0 --primary --auto --output DisplayPort-0 --off --output DisplayPort-1 --off
+                            echo "${DISPLAY_NAME}" > /tmp/displayname
+                            echo "*  " > /tmp/displaymode
+                            echo "HDMI-eDP" >> /tmp/displaymode
+                            ;;
+                        "DisplayPort-0")
+                            xrandr --output eDP --auto --right-of DisplayPort-0 --output HDMI-A-0 --off --output DisplayPort-0 --primary --auto --output DisplayPort-1 --off
+                            echo "${DISPLAY_NAME}" > /tmp/displayname
+                            echo "*  " > /tmp/displaymode
+                            echo "HDMI-eDP" >> /tmp/displaymode
+                            ;;
+                        "DisplayPort-1")
+                            xrandr --output eDP --auto --right-of DisplayPort-1 --output HDMI-A-0 --off --output DisplayPort-0 --off --output DisplayPort-1 --primary --auto
+                            echo "${DISPLAY_NAME}" > /tmp/displayname
+                            echo "*  " > /tmp/displaymode
+                            echo "HDMI-eDP" >> /tmp/displaymode
+                            ;;
+                    esac
+                fi
+                ;;
+            "closed")
+                display_only
+                ;;
+        esac
         ;; 
     5)
-        if [ "${HDMI_CONNECTED}" = "connected" ]; then
-            case "${LID_STATE}" in
-                "open")
-                    xrandr --output eDP --primary --auto --output HDMI-A-0 --auto --same-as eDP
-                    echo "來" > /tmp/displaymode
-                    echo "eDP-HDMI-Mirror" >> /tmp/displaymode
-                    ;;
-                "closed")
-                    xrandr --output eDP --off --output HDMI-A-0 --primary --auto
-                    echo " " > /tmp/displaymode
-                    echo "HDMI" >> /tmp/displaymode
-                    twm_update
-                    ;;
-            esac
-        fi
+        case "${LID_STATE}" in
+            "open")
+                DISPLAY_WRITTEN=$(cat /tmp/displayname)
+                CURRENT_MODE=$(tail -n1 /tmp/displaymode)
+                if [ "${DISPLAY_WRITTEN}" != "${DISPLAY_NAME}" -o "${CURRENT_MODE}" != "eDP-HDMI-Mirror" ]; then
+                    case "${DISPLAY_NAME}" in
+                        "HDMI-A-0")
+                            xrandr --output eDP --primary --auto --output HDMI-A-0 --auto --same-as eDP --output DisplayPort-0 --off --output DisplayPort-1 --off
+                            echo "${DISPLAY_NAME}" > /tmp/displayname
+                            echo "來" > /tmp/displaymode
+                            echo "eDP-HDMI-Mirror" >> /tmp/displaymode
+                            ;;
+                        "DisplayPort-0")
+                            xrandr --output eDP --primary --auto --output HDMI-A-0 --off --output DisplayPort-0 --auto --same-as eDP --output DisplayPort-1 --off
+                            echo "${DISPLAY_NAME}" > /tmp/displayname
+                            echo "來" > /tmp/displaymode
+                            echo "eDP-HDMI-Mirror" >> /tmp/displaymode
+                            ;;
+                        "DisplayPort-1")
+                            xrandr --output eDP --primary --auto --output HDMI-A-0 --off --output DisplayPort-0 --off --output DisplayPort-1 --auto --same-as eDP
+                            echo "${DISPLAY_NAME}" > /tmp/displayname
+                            echo "來" > /tmp/displaymode
+                            echo "eDP-HDMI-Mirror" >> /tmp/displaymode
+                            ;;
+                    esac
+                fi
+                ;;
+            "closed")
+                display_only
+                ;;
+        esac
         ;;
     6)
         arandr
         echo "? " > /tmp/displaymode
         echo "other" >> /tmp/displaymode
-        twm_update
+        echo "other" > /tmp/displayname
         exit 0
         ;;
-    *)
-        default_screen
-        twm_update
-        exit 0
-        ;;
+    # *)
+    #     default_screen
+    #     twm_update
+    #     exit 0
+    #     ;;
 esac
 
+twm_update

@@ -25,9 +25,6 @@ import XMonad hiding ((|||))
 import XMonad
 import XMonad.Actions.CycleSelectedLayouts
 import XMonad.Actions.CycleWindows
---import XMonad.Actions.GridSelect
--- import XMonad.Actions.MouseResize
---import XMonad.Actions.OnScreen
 import XMonad.Actions.SpawnOn
 import XMonad.Actions.Submap
 import XMonad.Actions.WindowBringer
@@ -52,10 +49,8 @@ import XMonad.Layout.Reflect
 import XMonad.Layout.Renamed (renamed, Rename(Replace))
 import XMonad.Layout.ResizableTile
 import XMonad.Layout.Spacing
--- import XMonad.Layout.StackTile
 import XMonad.Layout.StateFull
 import XMonad.Layout.TwoPanePersistent
--- import XMonad.Layout.WindowArranger
 
 import XMonad.Prompt
 
@@ -106,27 +101,11 @@ windowCount = gets $ Just . show . length . W.integrate' . W.stack . W.workspace
 
 mygotoMenu = gotoMenuArgs' "rofi" a
         where
-            a = ["-dmenu","-p","Go to window","-location","0","-lines","10","-theme","Paper"]
+            a = ["-dmenu","-i","-p","Go to window","-location","0","-lines","10","-theme","Paper"]
 
 mybringMenu = bringMenuArgs' "rofi" a
         where
-            a = ["-dmenu","-p","Bring window","-location","0","-lines","10","-theme","Paper"]
-
-------------------------------------------------------------------------
--- GRID SELECT
-------------------------------------------------------------------------
--- GridSelect displays items (programs, open windows, etc.) in a 2D grid
--- and lets the user select from it with the cursor/hjkl keys or the mouse.
-
--- gridSelect menu layout
--- mygridConfig  = defaultGSConfig
---    { gs_cellheight   = 40
---    , gs_cellwidth    = 300
---    , gs_cellpadding  = 6
---    , gs_originFractX = 0.5
---    , gs_originFractY = 0.5
---    , gs_font         = myFont
---    }
+            a = ["-dmenu","-i","-p","Bring window","-location","0","-lines","10","-theme","Paper"]
 
 ------------------------------------------------------------------------
 -- scratchPads
@@ -144,6 +123,9 @@ scratchpads = [
 
     , NS "doublecmdNS" "(doublecmd -L '/home/alexgum/' -R '/home/alexgum/' --no-splas >/dev/null 2>&1 &)" (className =? "Doublecmd")
         (customFloating $ W.RationalRect (0.05) (0.05) (0.9) (0.9))
+
+    , NS "goldendict" "(/home/alexgum/.scripts/qt-launch 'goldendict' &)" (className =? "GoldenDict")
+        (customFloating $ W.RationalRect (0.60) (0.03) (0.40) (0.96))
   ]
 
 
@@ -153,36 +135,15 @@ scratchpads = [
 -- workspace name. The number of workspaces is determined by the length
 -- of this list.
 --
--- A tagging example:
---
--- > workspaces = ["web", "irc", "code" ] ++ map show [4..9]
-
--- xmobarEscape :: String -> String
--- xmobarEscape = concatMap doubleLts
---   where
---         doubleLts '<' = "<<"
---        doubleLts x   = [x]
-
--- myWorkspaces :: [String]
--- myWorkspaces = clickable . (map xmobarEscape)
---                $ ["1:Dev","2:Web","3:Talk","4:Mail","5:Sys","6:View","7:Misc","8:VM"]
---   where
---         clickable l = [ "<action=xdotool key super+" ++ show (n) ++ "> " ++ ws ++ " </action>" |
---                       (i,ws) <- zip [1..8] l,
---                       let n = i ]
-
-
-myWorkspaces = ["1:\61728 ","2:爵 ","3:\62002 ","4:\64239 ","5:\63256 ","6:\63616 ","7:\58224 ","8:\59156 ","9:\62779 "]
+myWorkspaces :: [String]
+myWorkspaces = ["\61728 ","爵 ","\62002 ","\64239 ","\63256 ","\63616 ","\58224 ","\59156 ","\61818 "]
 
 -- Border colors for unfocused and focused windows, respectivelyscreen.
---
 myNormalBorderColor  = "#808080"
--- myFocusedBorderColor = "#32cd32"
 myFocusedBorderColor = "#FF8C00"
 
 ------------------------------------------------------------------------
 -- Key bindings. Add, modify or remove key bindings here.
---
 myKeys conf@(XConfig {XMonad.modMask = modm}) = M.fromList $
     -- launch a terminal
     [ ((modm, xK_Return), spawn $ XMonad.terminal conf)
@@ -192,9 +153,6 @@ myKeys conf@(XConfig {XMonad.modMask = modm}) = M.fromList $
 
     -- launch dmenu_run
     , ((modm .|. shiftMask, xK_p     ), spawn "/home/alexgum/.scripts/dmenu_script")
-
-    -- launch xmenu
-    -- , ((modm .|. mod1Mask,  xK_p     ), spawn "/home/alexgum/.scripts/myxmenu")
 
     -- launch lastpass dmenu (Super + Alt + L)
     , ((modm .|. mod1Mask,  xK_l     ), spawn "/home/alexgum/.scripts/lastpassmenu")
@@ -206,7 +164,7 @@ myKeys conf@(XConfig {XMonad.modMask = modm}) = M.fromList $
     , ((modm .|. mod1Mask, xK_slash ), spawn "/home/alexgum/.scripts/dmenuemoji")
 
     -- close focused window
-    , ((modm .|. shiftMask, xK_c     ), kill)
+    , ((modm ,     xK_BackSpace     ), kill)
 
      -- Rotate through the available layout algorithms
     , ((modm,               xK_space ), sendMessage NextLayout)
@@ -291,7 +249,10 @@ myKeys conf@(XConfig {XMonad.modMask = modm}) = M.fromList $
     , ((modm .|. shiftMask, xK_b     ), sendMessage ToggleStruts)
 
     -- Lock screen
-    , ((modm              , xK_s     ),  spawn "/home/alexgum/.scripts/lockscript lock")
+    , ((modm        , xK_grave       ),  spawn "/home/alexgum/.scripts/lockscript lock")
+
+    -- Lock screen
+    , ((modm .|. shiftMask, xK_grave ),  spawn "dm-tool switch-to-greeter")
 
     -- Lock screen picture update
     -- , ((modm .|. shiftMask, xK_s     ),  spawn "/home/alexgum/.scripts/lockscreenpicture")
@@ -300,7 +261,7 @@ myKeys conf@(XConfig {XMonad.modMask = modm}) = M.fromList $
     , ((modm .|. shiftMask, xK_q     ), io (exitWith ExitSuccess))
 
     -- Restart xmonad
-    , ((modm              , xK_q     ), spawn "xmonad --recompile; xmonad --restart")
+    , ((modm           , xK_q        ), spawn "xmonad --recompile; xmonad --restart")
 
     -- Select Display
     , ((0, xF86XK_Display), spawn "/home/alexgum/.scripts/displayselect-dmenu")
@@ -324,7 +285,7 @@ myKeys conf@(XConfig {XMonad.modMask = modm}) = M.fromList $
     , ((modm              , xK_F6    ), spawn "/home/alexgum/.scripts/displayselect-dmenu")
 
     -- Run xmessage with a summary of the default keybindings (useful for beginners)
-    , ((modm .|. shiftMask, xK_slash ), spawn ("echo \"" ++ help ++ "\" | gxmessage -timeout 10 -font 'Hack Nerd Font Mono 12' -name 'myKeyBindings' -default okay -wrap -file -"))
+    , ((modm .|. shiftMask, xK_slash ), spawn ("echo \"" ++ help ++ "\" | gxmessage -font 'Hack Nerd Font Mono 12' -name 'myKeyBindings' -default okay -wrap -file -"))
 
     -- Mute volume
     , ((0, xF86XK_AudioMute), spawn "/home/alexgum/.scripts/laptopvolume -mutetoggle")
@@ -376,6 +337,7 @@ myKeys conf@(XConfig {XMonad.modMask = modm}) = M.fromList $
     , ((modm, xK_x), namedScratchpadAction scratchpads "scratch-term")
     , ((modm .|. shiftMask, xK_v), namedScratchpadAction scratchpads "pavucontrol")
     , ((modm, xK_f), namedScratchpadAction scratchpads "doublecmdNS")
+    , ((modm, xK_d), namedScratchpadAction scratchpads "goldendict")
 
     -- Magnifier
     , ((modm .|. controlMask, xK_equal), sendMessage MagnifyMore)
@@ -384,8 +346,8 @@ myKeys conf@(XConfig {XMonad.modMask = modm}) = M.fromList $
 
     -- Screenshots
     , ((modm, xK_Print), submap . M.fromList $
-       [ ((0, xK_f),     spawn "xfce4-screenshooter -f -c -s ~/Documents/screenshot_$(date +\"%Y-%m-%d_%H%M%S\").png")
-       , ((0, xK_r),     spawn "xfce4-screenshooter -r -m -c -s ~/Documents/screenshot_$(date +\"%Y-%m-%d_%H%M%S\").png")
+       [ ((0, xK_f),     spawn "/home/alexgum/.scripts/myscreenshot -f")
+       , ((0, xK_r),     spawn "/home/alexgum/.scripts/myscreenshot -s")
        ])
     ]
     ++
@@ -441,13 +403,11 @@ myMouseBindings (XConfig {XMonad.modMask = modm}) = M.fromList $
 mySpacing :: Integer -> l a -> XMonad.Layout.LayoutModifier.ModifiedLayout Spacing l a
 mySpacing i = spacingRaw False (Border i i i i) True (Border i i i i) True
 
--- monocle    = renamed [Replace "monocle"]
---            $ noBorders Full
-
 monocle    = renamed [Replace "monocle"]
-           $ noBorders StateFull
+           $ noBorders Full
 
 tiled     = renamed [Replace "tiled"]
+           $ smartBorders
            $ limitWindows 8
            $ mySpacing 4
            $ magnifierOff
@@ -457,6 +417,7 @@ mtiled     = renamed [Replace "mtiled"]
            $ Mirror tiled
 
 reflH     = renamed [Replace "reflH"]
+           $ smartBorders
            $ limitWindows 8
            $ mySpacing 4
            $ magnifierOff
@@ -464,6 +425,7 @@ reflH     = renamed [Replace "reflH"]
            $ ResizableTall 1 (2/100) (1/2) []
 
 two    = renamed [Replace "two"]
+           $ smartBorders
            $ limitWindows 8
            $ mySpacing 4
            $ magnifierOff
@@ -510,20 +472,17 @@ myManageHook = composeAll
       className =? "Evolution"      --> doShift ( myWorkspaces !! 3)
     , className =? "Evolution-alarm-notify" --> doFloat
     , className =? "Evolution-alarm-notify" --> doShift ( myWorkspaces !! 3)
-    , className =? "Evolution-alarm-notify" --> doF W.focusDown
     , className =? "Evolution-alarm-notify"   --> doShift ( myWorkspaces !! 3)
     , className =? "Thunderbird"    --> doShift ( myWorkspaces !! 3)
-    , className =? "Slack"          --> doShift ( myWorkspaces !! 2)
+    , className =? "Slack"          --> doShift ( myWorkspaces !! 2) 
+    , className =? "Signal"         --> doShift ( myWorkspaces !! 2)
     , className =? "Skype"          --> doShift ( myWorkspaces !! 2)
     , className =? "draw.io"        --> doShift ( myWorkspaces !! 4)
-    --, className =? "firefox"        --> doShift ( myWorkspaces !! 1)
-    --, className =? "Gscan2pdf"      --> doShift ( myWorkspaces !! 6)
-    --, className =? "Simple-scan"    --> doShift ( myWorkspaces !! 6)
-    , className =? "Virt-manager"   --> doShift ( myWorkspaces !! 7)
-    , className =? "Deadbeef"       --> doCenterFloat
-    , className =? "Arandr"       --> doRectFloat (W.RationalRect 0.25 0.25 0.5 0.5)
+    , className =? "Virt-manager"   --> doShift ( myWorkspaces !! 8)
+    , className =? "Deadbeef"       --> doRectFloat (W.RationalRect 0.0 0.03 0.5 0.5)
+    , className =? "Arandr"         --> doRectFloat (W.RationalRect 0.25 0.25 0.5 0.5)
+    , className =? "GoldenDict"     --> doRectFloat (W.RationalRect 0.60 0.03 0.40 0.96)
     , className =? "Gimp"           --> doFloat
-    --, className =? "Slack"          --> doFloat
     , title     =? "Volume Control" --> doCenterFloat
     , title     =? "Administrator privileges required" --> doCenterFloat
     , title     =? "MyDrivesMessage" --> doRectFloat (W.RationalRect 0.72 0.03 0.28 0.4)
@@ -545,7 +504,6 @@ myManageHook = composeAll
     , resource  =? "desktop_window" --> doIgnore
     , resource  =? "kdesktop"       --> doIgnore 
     , className =? "Xfce4-notifyd" --> doIgnore
-    -- , isFullscreen --> doFullFloat
     ]
         where
             office = ["libreoffice","libreoffice-writer","libreoffice-calc"]
@@ -560,7 +518,8 @@ myManageHook = composeAll
 -- combine event hooks use mappend or mconcat from Data.Monoid.
 --
 -- myEventHook = mempty
--- myEventHook = fullscreenEventHook <+> docksEventHook
+    -- fullscreenEventHook is needed for different applications (e.g. xidlehook) identifying 
+    -- if any application is in the Full Screen mode
 myEventHook = fullscreenEventHook
 
 ------------------------------------------------------------------------
@@ -575,7 +534,7 @@ myLogHook h = dynamicLogWithPP . namedScratchpadFilterOutWorkspacePP $ xmobarPP
     { ppOutput = hPutStrLn h
     -- , ppTitle = xmobarColor "green" "" . shorten 30
     , ppOrder = \(workspace:layout:title:extras)
-        -> [workspace,"<action=`xdotool key super+space`>",layout,"</action>","<action=`xdotool key super+j`>","<fc=#FF00FF><"]++extras++["></fc>","</action>"]
+        -> [workspace,"<box type=Bottom width=2><action=`xdotool key super+space`>",layout,"</action></box> <box type=Bottom width=2><action=`xdotool key super+j`><fc=#FF00FF><fn=1>\xf2d2</fn>"]++extras++["</fc></action></box>"]
     , ppSep = " "
     , ppExtras = [windowCount]
     , ppCurrent = xmobarColor "green" "" . wrap "|" "|"
@@ -602,7 +561,9 @@ myLogHook h = dynamicLogWithPP . namedScratchpadFilterOutWorkspacePP $ xmobarPP
 --
 -- By default, do nothing.
 myStartupHook = do
-    spawn "killall -r picom; sleep 1; picom --experimental-backends &"
+    spawnOnce "killall -r picom; sleep 1; picom --experimental-backends &"
+    spawnOnce "/home/alexgum/.scripts/output-device-switch -detect &"
+    spawnOnce "/usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1 &"
     setWMName "LG3D"
 
 ------------------------------------------------------------------------
@@ -655,7 +616,7 @@ help = unlines ["The modifier key is 'Win'. Keybindings:",
     "mod-Enter        Launch terminal",
     "mod-p            Launch my programs",
     "mod-Shift-p      Launch dmenu run",
-    "mod-Shift-c      Close/kill the focused window",
+    "mod-Backspace    Close/kill the focused window",
     "mod-a            Cycle through 'Monocle' and 'Tall'",
     "mod-Shift-a      Cycle through 'Two Pane', 'Mirror Tiled','Refl. Tall'",
     "mod-Space        Rotate through the available layout algorithms",
@@ -675,9 +636,10 @@ help = unlines ["The modifier key is 'Win'. Keybindings:",
     "mod-Print,r     Region shot",
     "",
     "-- Scratchpads",
-    "mod-x          Terminal",
-    "mod-v          Vimwiki",
     "mod-f          Double Commander",
+    "mod-d          GoldenDict",
+    "mod-v          Vimwiki",
+    "mod-x          Terminal",
     "mod-Shift-v    Volume control",
     "",
     "-- Display & media",
@@ -722,10 +684,11 @@ help = unlines ["The modifier key is 'Win'. Keybindings:",
     "mod-.     Deincrement the number of windows in the master area",
     "",
     "-- quit, or restart",
-    "mod-Shift-q  Quit (logout)",
-    "mod-q        Restart Xmonad",
-    "mod-[1..9]   Switch to workSpace N",
-    "mod-s        Lock screen",
+    "mod-Shift-q        Quit (logout)",
+    "mod-q              Restart Xmonad",
+    "mod-[1..9]         Switch to workSpace N",
+    "mod-Backtick       Lock screen",
+    "mod-Shift-Backtick Switch User",
     "",
     "-- Workspaces & screens",
     "mod-Shift-[1..9]   Move client to workspace N",

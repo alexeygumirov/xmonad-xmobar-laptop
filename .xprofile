@@ -6,9 +6,11 @@
 
 setxkbmap us,ru,de -option -option 'grp:rshift_toggle,caps:ctrl_modifier'
 xinput disable "SynPS/2 Synaptics TouchPad"
+xsetroot -cursor_name left_ptr # setup cursor before xmonad and xmobar are launched. Otherwise cursor theme is not working on xmobar and trayer.
 export QT_SCREEN_SCALE_FACTORS=1
 export QT_SCALE_FACTOR=1
 export QT_QPA_PLATFORMTHEME="qt5ct"
+[ -f ~/.Xresources ] && xrdb ~/.Xresources
 
 # maintenance of the ssh-agent
 ssh-add -l &>/dev/null
@@ -28,24 +30,23 @@ common_run(){
     [ -x /usr/lib/xfce4/notifyd/xfce4-notifyd ] && ([ -z $(pgrep notifyd) ] && /usr/lib/xfce4/notifyd/xfce4-notifyd >/dev/null 2>&1 &)
     [ -x /usr/bin/nm-applet ] && (nm-applet 2> /dev/null &)
     [ -x /usr/bin/volumeicon ] && (volumeicon 2> /dev/null &)
-        [ -x /usr/bin/xfce4-clipman ] && (xfce4-clipman 2> /dev/null &)
-    [ -x /usr/bin/blueman-tray ] && (blueman-applet 2> /dev/null &)
-    if [ -x /usr/bin/xidlehook ]
-    then
-        [ ! -z $(pgrep xidlehook) ] && pkill xidlehook
-        (xidlehook --not-when-fullscreen --timer 900 '/home/alexgum/.scripts/lockscript notify' "" --timer 30 '/home/alexgum/.scripts/lockscript lock' "" &)
-    fi
+    (blueman-applet 2> /dev/null &)
+    /home/alexgum/.scripts/myidleswitch -off
+    [ -x /usr/bin/rclone ] && (/home/alexgum/.scripts/rclone-cron &)
     /home/alexgum/.scripts/rshift-start -launch
     /home/alexgum/.scripts/wgstatus &
     [ -x /usr/bin/imwheel ] && imwheel
+    /home/alexgum/.scripts/mycheckupdates
+    /home/alexgum/.scripts/output-device-switch -detect
 }
 
 case $1 in
     xmonad)
-        [ -x /usr/bin/trayer ] && (trayer --edge top --distance 2 --distancefrom right --align right --widthtype request --padding 6 --SetDockType true --SetPartialStrut true --expand true --monitor 0 --transparent true --alpha 0 --tint 0x1D3030 --height 20 2> /dev/null &)
+        [ -x /usr/bin/trayer ] && (trayer --edge top --distance 0 --distancefrom right --align right --widthtype request --padding 2 --SetDockType true --SetPartialStrut true --expand true --monitor 0 --transparent true --alpha 0 --tint 0x1D3030 --height 20 2> /dev/null &)
         common_run
         ;;
     qtile)
         common_run
+    [ -x /usr/bin/picom ] && (picom -f --experimental-backends 2> /dev/null &)
         ;;
 esac

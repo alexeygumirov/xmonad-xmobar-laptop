@@ -9,8 +9,6 @@ Config {
        , fgColor = "#F5F5DC"
        , alpha = 245
        , position = TopW L 100
-       , textOffset = 16 
-       , textOffsets = [17,17]
        , iconOffset = -1 
        , lowerOnStart = True
        , pickBroadest = False
@@ -20,17 +18,19 @@ Config {
        , allDesktops = False
        , overrideRedirect = True
        , commands = [ Run UnsafeStdinReader
-                    , Run Cpu ["-t", "<fc=#9400D3><fn=1>\xf2db</fn></fc>:<total>%", "-L","3","-H","50","--normal","green","--high","red"] 150
-                    , Run Memory ["-t","<fc=#C71585><fn=1>\xf538</fn></fc>:<usedratio>%"] 150
-                    , Run Date "<fc=#ee9a00>%a %_d.%b</fc> <fc=#ffd700>%H:%M</fc>" "date" 600
+                    , Run Cpu ["-t", "<fc=#9400D3><fn=1>\xf2db</fn></fc>:<total>%", "-L","3","-H","50","--normal","green","--high","red"] 200
+                    , Run Com "/home/alexgum/.scripts/xmobar-date" [] "date" 600 
                     , Run Com "/home/alexgum/.scripts/trayer-padding.sh" [] "trayerpad" 10
                     , Run Com "/home/alexgum/.scripts/rshift-start" ["-status"] "redshift" 30 
                     , Run Com "/home/alexgum/.scripts/battery-xmobar" [] "mybattery" 300
-                    , Run Com "/home/alexgum/.scripts/cputemp" [] "cputemp" 150
+                    , Run Com "/home/alexgum/.scripts/cputemp" [] "cputemp" 200
                     , Run Com "head" ["-n1","/tmp/displaymode"] "dmode" 10
+                    , Run Com "head" ["-n1","/tmp/sound_output_status"] "sound" 10
                     , Run Com "/home/alexgum/.scripts/monbrightness-xmobar" [] "brightness" 50
                     , Run Com "/home/alexgum/.scripts/wgstatus-xmobar" [] "wgstatus" 10
                     , Run Com "/home/alexgum/.scripts/mymounts" [] "mymounts" 300
+                    , Run Com "cat" ["/tmp/mycheckupdates"] "mycheckupd" 3000
+                    , Run Com "cat" ["/tmp/idlehookstatus"] "idlehook" 10 
                     , Run Kbd [("us", "<icon=22xus-flag.xpm/>"),("de", "<icon=22xgermany-flag.xpm/>"),("ru", "<icon=22xrussia-flag.xpm/>")]
                     , Run BatteryP ["BAT0"]
                                    ["-t", "<fc=#7FFF00></fc><timeleft>"
@@ -41,5 +41,5 @@ Config {
                     ]
        , sepChar = "%"
        , alignSep = "}{"
-       , template = " <action=`/home/alexgum/.scripts/myxmenu`> </action> %UnsafeStdinReader% } <action=`xdotool key super+F6`>%dmode%</action> %brightness%    <action=`/home/alexgum/.scripts/mymounts -show`>%mymounts%</action> <action=`/home/alexgum/.scripts/rshift-start -switch`>%redshift%</action> <fc=#32CD32>%wgstatus%</fc>{<fc=#FFA07A>[</fc>%cpu%/%cputemp% %memory%<fc=#FFA07A>]</fc> <action=`xdotool key super+shift+c`>|   |</action> %mybattery%%battery% | %date% | <action=`xkb-switch -n`>%kbd%</action> |%trayerpad%"
+       , template = "<box type=Bottom offset=L4 width=2> <action=`/home/alexgum/.scripts/myxmenu`> </action> </box>%UnsafeStdinReader% } <box type=Bottom offset=L4 width=2><action=`xdotool key super+F6`>%dmode%</action></box> %brightness%    <box type=Bottom offset=L4 width=2><action=`/home/alexgum/.scripts/mymounts -show`>%mymounts%</action></box> <box type=Bottom offset=L4 width=2><action=`/home/alexgum/.scripts/rshift-start -toggle`>%redshift%</action></box> <box type=Bottom width=2><action=`/home/alexgum/.scripts/output-device-switch -toggle`><fc=#FFB2FF>%sound%</fc></action></box> <fc=#32CD32>%wgstatus%</fc>{%mycheckupd% <action=`/home/alexgum/.scripts/myidleswitch -toggle`> <box type=Bottom width=2 offset=L8>%idlehook%</box></action><action=`betterlockscreen -l`> <box type=Bottom width=2 offset=L2> </box></action> <box type=Left widht=1> %cpu%/%cputemp% </box><box type=HBoth mr=2 width=1><action=`xdotool key super+BackSpace`> <box type=Bottom offset=L4 width=2> </box> </action></box> %mybattery%%battery% <box type=HBoth width=1> %date% </box><action=`xkb-switch -n`> <box type=Bottom width=2>%kbd%</box> </action><box type=Left width=1> %trayerpad%</box>"
        }
