@@ -129,7 +129,7 @@ ACTION=="change", KERNEL=="card0", SUBSYSTEM=="drm", RUN+="/usr/bin/systemctl st
 Full `xmonad.hs` configuration you can find [here](.xmonad/xmonad.hs). Here is just show essential part of the code.
 
 I use `XMonad.Layout.IndependentScreens` to detect number of screens.
-Then I put myLogHook in a separate definition (you can check it in the configuration file). It allows to make `main` part short can clean and I can easier redirect log to both `xmobar` pipes when they are open.
+Then I put myLogHook in a separate definition (you can check it in the configuration file). It allows to make `main` part short and clean and I can easier redirect log to both `xmobar` pipes when they are open.
 
 And then in the `main` function:
 
