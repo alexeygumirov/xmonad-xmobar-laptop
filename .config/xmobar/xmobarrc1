@@ -1,7 +1,7 @@
 Config { 
-       font = "xft:Hack Nerd Font:style=Regular:pixelsize=16:antialias=true:hinting=true"
-       , additionalFonts = [ "xft:Font Awesome 5 Free:style=Solid:pixelsize=16:antialias=true"
-                             , "xft:Icons:pixelsize=16:antialias=true:hinting=true"
+       font = "xft:Hack Nerd Font:style=Regular:size=12:antialias=true:hinting=true"
+       , additionalFonts = [ "xft:Font Awesome 5 Free:style=Solid:size=12:antialias=true"
+                             , "xft:Icons:size=12:antialias=true:hinting=true"
                            ]
        , borderColor = "black"
        , border = NoBorder
