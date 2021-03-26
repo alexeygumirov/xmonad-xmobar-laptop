@@ -1,4 +1,4 @@
-#!/usr/bin/sh
+#!/bin/sh
 
 HDMI_CONNECTED=$(cat /sys/devices/pci0000:00/0000:00:08.1/0000:05:00.0/drm/card0/card0-HDMI-A-1/status)
 DP1_CONNECTED=$(cat /sys/devices/pci0000:00/0000:00:08.1/0000:05:00.0/drm/card0/card0-DP-1/status)
@@ -32,8 +32,9 @@ twm_update(){
 
 default_screen(){
     xrandr --output eDP --primary --auto --output HDMI-A-0 --off --output DisplayPort-0 --off --output DisplayPort-1 --off
-    echo " " > /tmp/displaymode
-    echo "default" >> /tmp/displaymode
+    printf " \n" > /tmp/displaymode
+    printf "default\n" >> /tmp/displaymode
+    printf "" > /tmp/display_num
 }
 
 display_only(){
@@ -43,23 +44,20 @@ display_only(){
         case "${DISPLAY_NAME}" in
             "HDMI-A-0")
                 xrandr --output eDP --off --output HDMI-A-0 --primary --auto --output DisplayPort-0 --off --output DisplayPort-1 --off
-                echo "${DISPLAY_NAME}" > /tmp/displayname
-                echo " " > /tmp/displaymode
-                echo "HDMI" >> /tmp/displaymode
+                printf "${DISPLAY_NAME}" > /tmp/displayname
                 ;;
             "DisplayPort-0")
                 xrandr --output eDP --off --output HDMI-A-0 --off --output DisplayPort-0 --primary --auto --output DisplayPort-1 --off
-                echo "${DISPLAY_NAME}" > /tmp/displayname
-                echo " " > /tmp/displaymode
-                echo "HDMI" >> /tmp/displaymode
+                printf "${DISPLAY_NAME}" > /tmp/displayname
                 ;;
             "DisplayPort-1")
                 xrandr --output eDP --off --output HDMI-A-0 --off --output DisplayPort-0 --off --output DisplayPort-1 --primary --auto
-                echo "${DISPLAY_NAME}" > /tmp/displayname
-                echo " " > /tmp/displaymode
-                echo "HDMI" >> /tmp/displaymode
+                printf "${DISPLAY_NAME}" > /tmp/displayname
                 ;;
         esac
+        printf " \n" > /tmp/displaymode
+        printf "HDMI\n" >> /tmp/displaymode
+        printf "" > /tmp/display_num
     fi
 }
 
@@ -83,23 +81,21 @@ case $1 in
                     case "${DISPLAY_NAME}" in
                         "HDMI-A-0")
                             xrandr --output eDP --primary --auto --output HDMI-A-0 --auto --right-of eDP --output DisplayPort-0 --off --output DisplayPort-1 --off
-                            echo "${DISPLAY_NAME}" > /tmp/displayname
-                            echo "*  " > /tmp/displaymode
-                            echo "eDP-HDMI" >> /tmp/displaymode
+                            printf "${DISPLAY_NAME}" > /tmp/displayname
                             ;;
                         "DisplayPort-0")
                             xrandr --output eDP --primary --auto --output HDMI-A-0 --off --output DisplayPort-0 --auto --right-of eDP --output DisplayPort-1 --off
-                            echo "${DISPLAY_NAME}" > /tmp/displayname
-                            echo "*  " > /tmp/displaymode
-                            echo "eDP-HDMI" >> /tmp/displaymode
+                            printf "${DISPLAY_NAME}" > /tmp/displayname
                             ;;
                         "DisplayPort-1")
                             xrandr --output eDP --primary --auto --output HDMI-A-0 --off --output DisplayPort-0 --off --output DisplayPort-1 --auto --right-of eDP
-                            echo "${DISPLAY_NAME}" > /tmp/displayname
-                            echo "*  " > /tmp/displaymode
-                            echo "eDP-HDMI" >> /tmp/displaymode
+                            printf "${DISPLAY_NAME}" > /tmp/displayname
                             ;;
                     esac
+                    printf "*  \n" > /tmp/displaymode
+                    printf "eDP-HDMI\n" >> /tmp/displaymode
+                    printf "\n" > /tmp/display_num
+                    printf "\n" >> /tmp/display_num
                 fi
                 ;;
             "closed")
@@ -119,23 +115,21 @@ case $1 in
                     case "${DISPLAY_NAME}" in
                         "HDMI-A-0")
                             xrandr --output eDP --auto --right-of HDMI-A-0 --output HDMI-A-0 --primary --auto --output DisplayPort-0 --off --output DisplayPort-1 --off
-                            echo "${DISPLAY_NAME}" > /tmp/displayname
-                            echo "*  " > /tmp/displaymode
-                            echo "HDMI-eDP" >> /tmp/displaymode
+                            printf "${DISPLAY_NAME}" > /tmp/displayname
                             ;;
                         "DisplayPort-0")
                             xrandr --output eDP --auto --right-of DisplayPort-0 --output HDMI-A-0 --off --output DisplayPort-0 --primary --auto --output DisplayPort-1 --off
-                            echo "${DISPLAY_NAME}" > /tmp/displayname
-                            echo "*  " > /tmp/displaymode
-                            echo "HDMI-eDP" >> /tmp/displaymode
+                            printf "${DISPLAY_NAME}" > /tmp/displayname
                             ;;
                         "DisplayPort-1")
                             xrandr --output eDP --auto --right-of DisplayPort-1 --output HDMI-A-0 --off --output DisplayPort-0 --off --output DisplayPort-1 --primary --auto
-                            echo "${DISPLAY_NAME}" > /tmp/displayname
-                            echo "*  " > /tmp/displaymode
-                            echo "HDMI-eDP" >> /tmp/displaymode
+                            printf "${DISPLAY_NAME}" > /tmp/displayname
                             ;;
                     esac
+                    printf "*  \n" > /tmp/displaymode
+                    printf "HDMI-eDP\n" >> /tmp/displaymode
+                    printf "\n" > /tmp/display_num
+                    printf "\n" >> /tmp/display_num
                 fi
                 ;;
             "closed")
@@ -152,23 +146,20 @@ case $1 in
                     case "${DISPLAY_NAME}" in
                         "HDMI-A-0")
                             xrandr --output eDP --primary --auto --output HDMI-A-0 --auto --same-as eDP --output DisplayPort-0 --off --output DisplayPort-1 --off
-                            echo "${DISPLAY_NAME}" > /tmp/displayname
-                            echo "來" > /tmp/displaymode
-                            echo "eDP-HDMI-Mirror" >> /tmp/displaymode
+                            printf "${DISPLAY_NAME}" > /tmp/displayname
                             ;;
                         "DisplayPort-0")
                             xrandr --output eDP --primary --auto --output HDMI-A-0 --off --output DisplayPort-0 --auto --same-as eDP --output DisplayPort-1 --off
-                            echo "${DISPLAY_NAME}" > /tmp/displayname
-                            echo "來" > /tmp/displaymode
-                            echo "eDP-HDMI-Mirror" >> /tmp/displaymode
+                            printf "${DISPLAY_NAME}" > /tmp/displayname
                             ;;
                         "DisplayPort-1")
                             xrandr --output eDP --primary --auto --output HDMI-A-0 --off --output DisplayPort-0 --off --output DisplayPort-1 --auto --same-as eDP
-                            echo "${DISPLAY_NAME}" > /tmp/displayname
-                            echo "來" > /tmp/displaymode
-                            echo "eDP-HDMI-Mirror" >> /tmp/displaymode
+                            printf "${DISPLAY_NAME}" > /tmp/displayname
                             ;;
                     esac
+                    printf "來\n" > /tmp/displaymode
+                    printf "eDP-HDMI-Mirror\n" >> /tmp/displaymode
+                    printf "" > /tmp/display_num
                 fi
                 ;;
             "closed")
@@ -178,9 +169,11 @@ case $1 in
         ;;
     6)
         arandr
-        echo "? " > /tmp/displaymode
-        echo "other" >> /tmp/displaymode
-        echo "other" > /tmp/displayname
+        printf "? \n" > /tmp/displaymode
+        printf "other\n" >> /tmp/displaymode
+        printf "other" > /tmp/displayname
+        printf "\n" > /tmp/display_num
+        printf "\n" >> /tmp/display_num
         exit 0
         ;;
     # *)

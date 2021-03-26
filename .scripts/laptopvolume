@@ -24,11 +24,11 @@ case $1 in
         case $CURRENT_PLAYBACK_VOLUME in
             150)
                 pactl set-sink-volume @DEFAULT_SINK@ 150%
-                echo 150 > /tmp/volumexob
+                printf "150\n" > /tmp/volumexob
                 ;;
             14[0-9])
                 pactl set-sink-volume @DEFAULT_SINK@ 150%
-                echo 150 > /tmp/volumexob
+                printf "150\n" > /tmp/volumexob
                 ;;
             1[0-3][0-9])
                 pactl set-sink-volume @DEFAULT_SINK@ +10%
@@ -69,11 +69,11 @@ case $1 in
                 ;;
             10)
                 pactl set-sink-mute @DEFAULT_SINK@ 1
-                echo 0 > /tmp/volumexob
+                printf "0\n" > /tmp/volumexob
                 ;;
             [0-9])
                 pactl set-sink-mute @DEFAULT_SINK@ 1
-                echo 0 > /tmp/volumexob
+                printf "0\n" > /tmp/volumexob
                 ;;
         esac
         ;;
@@ -86,7 +86,7 @@ case $1 in
         if [ -z "$PLAYBACK_STATE" ]
         then
             pactl set-sink-mute @DEFAULT_SINK@ 1
-            echo 0 > /tmp/volumexob
+            printf "0\n" > /tmp/volumexob
         fi
         ;;
 esac

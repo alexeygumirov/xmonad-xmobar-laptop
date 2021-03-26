@@ -5,82 +5,82 @@ CHARGING_STATUS=$(cat /sys/class/power_supply/BAT0/uevent | grep 'POWER_SUPPLY_S
 
 if [ "${CHARGING_STATUS}" = "Unknown" ]
 then
-    echo "<fc=#87CEFA></fc>:${BATTERY_LEVEL}%"
+    printf "<fc=#87CEFA></fc>:${BATTERY_LEVEL}%%"
 fi
 
 if [ "${CHARGING_STATUS}" = "Charging" ]
 then
     case $BATTERY_LEVEL in
         100)
-            echo "<fc=#7CFC00> </fc>${BATTERY_LEVEL}%"
+            printf "<fc=#7CFC00> </fc>${BATTERY_LEVEL}%%"
             ;;
         9[0-9])
-            echo "<fc=#87CEFA> </fc>${BATTERY_LEVEL}%"
+            printf "<fc=#87CEFA> </fc>${BATTERY_LEVEL}%%"
             ;;
         8[0-9])
-            echo "<fc=#87CEFA> </fc>${BATTERY_LEVEL}%"
+            printf "<fc=#87CEFA> </fc>${BATTERY_LEVEL}%%"
             ;;
         [6-7][0-9])
-            echo "<fc=#87CEFA> </fc>${BATTERY_LEVEL}%"
+            printf "<fc=#87CEFA> </fc>${BATTERY_LEVEL}%%"
             ;;
         [4-5][0-9])
-            echo "<fc=#87CEFA> </fc>${BATTERY_LEVEL}%"
+            printf "<fc=#87CEFA> </fc>${BATTERY_LEVEL}%%"
             ;;
         3[0-9])
-            echo "<fc=#87CEFA> </fc>${BATTERY_LEVEL}%"
+            printf "<fc=#87CEFA> </fc>${BATTERY_LEVEL}%%"
             ;;
         2[0-9])
-            echo "<fc=#87CEFA> </fc>${BATTERY_LEVEL}%"
+            printf "<fc=#87CEFA> </fc>${BATTERY_LEVEL}%%"
             ;;
         1[0-9])
-            echo "<fc=#87CEFA> </fc>${BATTERY_LEVEL}%"
+            printf "<fc=#87CEFA> </fc>${BATTERY_LEVEL}%%"
             ;;
         [0-9])
-            echo "<fc=#FF0000> </fc>${BATTERY_LEVEL}%"
+            printf "<fc=#FF0000> </fc>${BATTERY_LEVEL}%%"
             ;;
     esac
 fi
 
 if [ "${CHARGING_STATUS}" = "Full" ]
 then
-    echo "<fc=#7CFC00></fc>:${BATTERY_LEVEL}%"
+    printf "<fc=#7CFC00></fc>:${BATTERY_LEVEL}%"
 fi
 
 if [ "${CHARGING_STATUS}" = "Discharging" ]
 then
     case $BATTERY_LEVEL in
         100)
-            echo "<fc=#7CFC00></fc>:${BATTERY_LEVEL}%"
+            printf "<fc=#7CFC00></fc>:${BATTERY_LEVEL}%%"
             ;;
         9[0-9])
-            echo "<fc=#7CFC00></fc>:${BATTERY_LEVEL}%"
+            printf "<fc=#7CFC00></fc>:${BATTERY_LEVEL}%%"
             ;;
         8[0-9])
-            echo "<fc=#87CEFA></fc>:${BATTERY_LEVEL}%"
+            printf "<fc=#87CEFA></fc>:${BATTERY_LEVEL}%%"
             ;;
         7[0-9])
-            echo "<fc=#87CEFA></fc>:${BATTERY_LEVEL}%"
+            printf "<fc=#87CEFA></fc>:${BATTERY_LEVEL}%%"
             ;;
         6[0-9])
-            echo "<fc=#87CEFA></fc>:${BATTERY_LEVEL}%"
+            printf "<fc=#87CEFA></fc>:${BATTERY_LEVEL}%%"
             ;;
         5[0-9])
-            echo "<fc=#87CEFA></fc>:${BATTERY_LEVEL}%"
+            printf "<fc=#87CEFA></fc>:${BATTERY_LEVEL}%%"
             ;;
         4[0-9])
-            echo "<fc=#87CEFA></fc>:${BATTERY_LEVEL}%"
+            printf "<fc=#87CEFA></fc>:${BATTERY_LEVEL}%%"
             ;;
         3[0-9])
-            echo "<fc=#87CEFA></fc>:${BATTERY_LEVEL}%"
+            printf "<fc=#87CEFA></fc>:${BATTERY_LEVEL}%%"
             ;;
         2[0-9])
-            echo "<fc=#87CEFA></fc>:${BATTERY_LEVEL}%"
+            printf "<fc=#87CEFA></fc>:${BATTERY_LEVEL}%%"
             ;;
         1[0-9])
-            echo "<fc=#FF0000></fc>:${BATTERY_LEVEL}%"
+            printf "<fc=#FF0000></fc>:${BATTERY_LEVEL}%%"
             ;;
         [0-9])
-            echo "<fc=#FF0000></fc>:${BATTERY_LEVEL}%"
+            printf "<fc=#FF0000></fc>:${BATTERY_LEVEL}%%"
             ;;
     esac
 fi

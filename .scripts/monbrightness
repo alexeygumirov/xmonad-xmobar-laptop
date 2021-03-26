@@ -3,34 +3,37 @@
 MAX_BRIGHTNESS=255
 MIN_BRIGHTNESS=1
 STEP=20
+STEP_MIN=$(( $STEP + 1 ))
 
 CURRENT_BRIGHTNESS=$(pkexec /usr/bin/xfpm-power-backlight-helper --get-brightness)
+echo $CURRENT_BRIGHTNESS
 
 [ ! -e /tmp/brightnessxob ] && mkfifo /tmp/brightnessxob
 
 (tail -f /tmp/brightnessxob | xob -m 255 -t 2000 -s backlight > /dev/null 2> /dev/null &)
 
-case $1 in
-    -up)
-        if [ $CURRENT_BRIGHTNESS -ge $(expr $MAX_BRIGHTNESS - $STEP) ]; then
+case "$1" in
+    "-up")
+        if [ $CURRENT_BRIGHTNESS -ge $(( $MAX_BRIGHTNESS - $STEP )) ]; then
             pkexec /usr/bin/xfpm-power-backlight-helper --set-brightness $MAX_BRIGHTNESS
-            echo 255 > /tmp/brightnessxob
+            printf "255\n" > /tmp/brightnessxobl
         else
-            BRIGHTNESS=$(expr $CURRENT_BRIGHTNESS + $STEP)
+            BRIGHTNESS=$(( $CURRENT_BRIGHTNESS + $STEP ))
             pkexec /usr/bin/xfpm-power-backlight-helper --set-brightness $BRIGHTNESS
-            echo $BRIGHTNESS > /tmp/brightnessxob
+            printf "$BRIGHTNESS\n" > /tmp/brightnessxob
         fi
         ;;
-    -down)
-        if [ $CURRENT_BRIGHTNESS -le $(expr $STEP + 1) ]; then
+    "-down")
+        if [ $CURRENT_BRIGHTNESS -le $STEP_MIN ]; then
             pkexec /usr/bin/xfpm-power-backlight-helper --set-brightness $MIN_BRIGHTNESS
-            echo 1 > /tmp/brightnessxob
+            printf "255\n" > /tmp/brightnessxob
         else
-            BRIGHTNESS=$(expr $CURRENT_BRIGHTNESS - $STEP) 
+            BRIGHTNESS=$(( $CURRENT_BRIGHTNESS - $STEP )) 
             pkexec /usr/bin/xfpm-power-backlight-helper --set-brightness $BRIGHTNESS
-            echo $BRIGHTNESS > /tmp/brightnessxob
+            printf "$BRIGHTNESS\n" > /tmp/brightnessxob
         fi
         ;;
 esac
 
-sleep 3s && pkill -f "tail -f /tmp/brightnessxob"
+sleep 3s
+pkill -f "tail -f /tmp/brightnessxob"

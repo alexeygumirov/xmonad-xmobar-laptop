@@ -1,29 +1,35 @@
 #!/bin/sh
 
+LOCATION="50.6959827:7.1578809"
+TEMPERATURE="6500:4200"
+
+start_and_status(){
+    (/usr/bin/redshift -l "${LOCATION}" -t "${TEMPERATURE}" & )
+    [ ! -z "$(pgrep -f redshift)" ] && printf '%s' "<fc=#FF1A1A> </fc>" > /tmp/redshift_status
+}
+
 case "$1" in
     "-status")
         cat /tmp/redshift_status
         ;;
-    "-switch")
+    "-toggle")
         if [ -x /usr/bin/redshift ]
         then
-            if [ -z $(pgrep -f redshift) ]
+            if [ -z "$(pgrep -f redshift)" ]
             then
-                (/usr/bin/redshift -l 52.584229:13.376416 -t 6500:4200 & )
-                [ ! -z $(pgrep -f redshift) ] && echo "<fc=#FF1A1A> </fc>" > /tmp/redshift_status
+                start_and_status
             else
                 pkill -f redshift
-                echo " " > /tmp/redshift_status
+                printf '%s' " " > /tmp/redshift_status
             fi
         fi    
         ;;
     "-launch")
         if [ -x /usr/bin/redshift ]
         then
-            if [ -z $(pgrep -f redshift) ]
+            if [ -z "$(pgrep -f redshift)" ]
             then
-                (/usr/bin/redshift -l 52.584229:13.376416 -t 6500:4200 & )
-                [ ! -z $(pgrep -f redshift) ] && echo "<fc=#FF1A1A> </fc>" > /tmp/redshift_status
+                start_and_status
             fi
         fi    
         ;;

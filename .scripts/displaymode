@@ -1,4 +1,4 @@
-#!/usr/bin/sh
+#!/bin/sh
 
 HDMI_CONNECTED=$(cat /sys/devices/pci0000:00/0000:00:08.1/0000:05:00.0/drm/card0/card0-HDMI-A-1/status)
 DP1_CONNECTED=$(cat /sys/devices/pci0000:00/0000:00:08.1/0000:05:00.0/drm/card0/card0-DP-1/status)
@@ -39,23 +39,30 @@ case "${LID_STATE}" in
         case "${DISPLAY_NAME}" in
             "none")
                 disconnect_display
-                echo " " > /tmp/displaymode
-                echo "default" >> /tmp/displaymode
+                printf " \n" > /tmp/displaymode
+                printf "default\n" >> /tmp/displaymode
+                printf "" > /tmp/display_num
                 ;;
             "HDMI-A-0")
                 xrandr --output eDP --primary --auto --output HDMI-A-0 --auto --right-of eDP --output DisplayPort-0 --off --output DisplayPort-1 --off
-                echo "*  " > /tmp/displaymode
-                echo "eDP-HDMI" >> /tmp/displaymode
+                printf "*  \n" > /tmp/displaymode
+                printf "eDP-HDMI\n" >> /tmp/displaymode
+                printf "\n" > /tmp/display_num
+                printf "\n" >> /tmp/display_num
                 ;;
             "DisplayPort-0")
                 xrandr --output eDP --primary --auto --output HDMI-A-0 --off --output DisplayPort-0 --auto --right-of eDP --output DisplayPort-1 --off
-                echo "*  " > /tmp/displaymode
-                echo "eDP-HDMI" >> /tmp/displaymode
+                printf "*  \n" > /tmp/displaymode
+                printf "eDP-HDMI\n" >> /tmp/displaymode
+                printf "\n" > /tmp/display_num
+                printf "\n" >> /tmp/display_num
                 ;;
             "DisplayPort-1")
                 xrandr --output eDP --primary --auto --output HDMI-A-0 --off --output DisplayPort-0 --off --output DisplayPort-1 --auto --right-of eDP
-                echo "*  " > /tmp/displaymode
-                echo "eDP-HDMI" >> /tmp/displaymode
+                printf "*  \n" > /tmp/displaymode
+                printf "eDP-HDMI\n" >> /tmp/displaymode
+                printf "\n" > /tmp/display_num
+                printf "\n" >> /tmp/display_num
                 ;;
         esac
         ;;
@@ -63,33 +70,38 @@ case "${LID_STATE}" in
         case "${DISPLAY_NAME}" in
             "none")
                 disconnect_display
-                echo " " > /tmp/displaymode
-                echo "default" >> /tmp/displaymode
+                printf " \n" > /tmp/displaymode
+                printf "default\n" >> /tmp/displaymode
+                printf "" > /tmp/display_num
                 ;;
             "HDMI-A-0")
                 xrandr --output eDP --off --output HDMI-A-0 --primary --auto --output DisplayPort-0 --off --output DisplayPort-1 --off
-                echo " " > /tmp/displaymode
-                echo "HDMI" >> /tmp/displaymode
+                printf " \n" > /tmp/displaymode
+                printf "HDMI\n" >> /tmp/displaymode
+                printf "" > /tmp/display_num
                 ;;
             "DisplayPort-0")
                 xrandr --output eDP --off --output HDMI-A-0 --off --output DisplayPort-0 --primary --auto --output DisplayPort-1 --off
-                echo " " > /tmp/displaymode
-                echo "HDMI" >> /tmp/displaymode
+                printf " \n" > /tmp/displaymode
+                printf "HDMI\n" >> /tmp/displaymode
+                printf "" > /tmp/display_num
                 ;;
             "DisplayPort-1")
                 xrandr --output eDP --off --output HDMI-A-0 --off --output DisplayPort-0 --off --output DisplayPort-1 --primary --auto
-                echo " " > /tmp/displaymode
-                echo "HDMI" >> /tmp/displaymode
+                printf " \n" > /tmp/displaymode
+                printf "HDMI\n" >> /tmp/displaymode
+                printf "" > /tmp/display_num
                 ;;
         esac
         ;;
     *)
         disconnect_display
-        echo " " > /tmp/displaymode
-        echo "default" >> /tmp/displaymode
+        printf " \n" > /tmp/displaymode
+        printf "default\n" >> /tmp/displaymode
+        printf "" > /tmp/display_num
         ;;
 esac
 
 twm_update
 
-echo "${DISPLAY_NAME}" > /tmp/displayname
+printf "${DISPLAY_NAME}" > /tmp/displayname
