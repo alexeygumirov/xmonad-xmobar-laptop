@@ -11,9 +11,9 @@ I use `systemd` service for the detection of the external monitor/screen attachm
 
 ## Screenshot
 
-![Single screen shot](screenshot/single_screen.png)
+![Single screen shot](./screenshot/single_screen.png)
 
-![Dual screen shot](screenshot/dual_screen.png)
+![Dual screen shot](./screenshot/dual_screen.png)
 
 ## Sequence (logic)
 
