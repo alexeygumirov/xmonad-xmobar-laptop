@@ -1,0 +1,47 @@
+#!/bin/sh
+
+# script to calls `maim` program for screenshots and save screenshots into the special directory ~/Documents/screenshots_full and ~/Documents/screenshots_sel
+# takes following keys:
+#   -f : Full screen (all monitors)
+#   -p : for Primary screen (full screen)
+#   -s : for Secondary screen (full screen)
+#   -r : for rectangular selection (full screen)
+#   -w : Window screenshot
+
+SHOT_DIR_SEL="$HOME/Documents/screenshots_sel"
+SHOT_DIR_FULL="$HOME/Documents/screenshots_full"
+DATE=$(date +"%Y-%m-%d_%H%M%S")
+
+case "$1" in
+    "-p")
+        [ ! -d "$SHOT_DIR_FULL" ] && mkdir "$SHOT_DIR_FULL"
+        maim -u -B -g $(xrandr -q | grep ' connected' | grep primary | awk '{print $4}') "${SHOT_DIR_FULL}/screenshot_full_${DATE}.png"
+        [ -f  "${SHOT_DIR_FULL}/screenshot_full_${DATE}.png" ] && notify-send -t 2000 "Screenshot" "Primary Screen."
+        ;;
+    "-s")
+        [ ! -d "$SHOT_DIR_FULL" ] && mkdir "$SHOT_DIR_FULL"
+        maim -u -B -g $(xrandr -q | grep ' connected' | grep -v primary | awk '{print $3}') "${SHOT_DIR_FULL}/screenshot_full_${DATE}.png"
+        [ -f  "${SHOT_DIR_FULL}/screenshot_full_${DATE}.png" ] && notify-send -t 2000 "Screenshot" "Secondary Screen."
+        ;;
+    "-r")
+        [ ! -d "$SHOT_DIR_SEL" ] && mkdir "$SHOT_DIR_SEL"
+        maim -s -B "${SHOT_DIR_SEL}/screenshot_sel_${DATE}.png"
+        [ -f  "${SHOT_DIR_SEL}/screenshot_sel_${DATE}.png" ] && notify-send -t 2000 "Screenshot" "Selection."
+        ;;
+    "-f")
+        [ ! -d "$SHOT_DIR_FULL" ] && mkdir "$SHOT_DIR_FULL"
+        maim -u -B "${SHOT_DIR_FULL}/screenshot_full_${DATE}.png"
+        [ -f  "${SHOT_DIR_FULL}/screenshot_full_${DATE}.png" ] && notify-send -t 2000 "Screenshot" "Full Screen."
+        ;;
+    "-w")
+        [ ! -d "$SHOT_DIR_SEL" ] && mkdir "$SHOT_DIR_SEL"
+        maim -u -B -i $(xdotool getwindowfocus) "${SHOT_DIR_SEL}/screenshot_win_${DATE}.png"
+        [ -f  "${SHOT_DIR_SEL}/screenshot_win_${DATE}.png" ] && notify-send -t 2000 "Screenshot" "Window."
+        ;;
+    *)
+        printf '%s\n' "Usage:"
+        printf '%s\n' "  -r: screenshot of the selected area."
+        printf '%s\n' "  -w: screenshot of the window."
+        printf '%s\n' "  -f: full screen."
+        ;;
+esac

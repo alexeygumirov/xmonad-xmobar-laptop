@@ -1,0 +1,27 @@
+/* XPM */
+static char *layout_monadtall_mirr[] = {
+/* columns rows colors chars-per-pixel */
+"18 18 3 1 ",
+"  c #b3b3b3",
+". c #b3b3b3",
+"X c None",
+/* pixels */
+" ................ ",
+".    .            ",
+". XXXXX  XXXXXXX .",
+". XXXXX  XXXXXXX .",
+". XXXXX  XXXXXXX .",
+". ..     XXXXXXX .",
+".        XXXXXXX .",
+". XXXXX  XXXXXXX .",
+". XXXXX  XXXXXXX .",
+". XXXXX  XXXXXXX .",
+". XXXXX  XXXXXXX .",
+".        XXXXXXX .",
+". ...    XXXXXXX .",
+". XXXXX  XXXXXXX .",
+". XXXXX  XXXXXXX .",
+". XXXXX  XXXXXXX .",
+"                 .",
+" ...............  "
+};

@@ -11,6 +11,8 @@ I use `systemd` service for the detection of the external monitor/screen attachm
 
 ## Screenshot
 
+![Single screen shot](screenshot/single_screen.png)
+
 ![Dual screen shot](screenshot/dual_screen.png)
 
 ## Sequence (logic)
@@ -138,22 +140,22 @@ main = do
     nScreens <- countScreens
     if nScreens == 1
         then do 
-            xmproc0 <- spawnPipe "xmobar -x 0 /home/alexgum/.config/xmobar/xmobarrc"
-            xmonad $ docks defaults {
-                    manageHook = manageDocks <+> namedScratchpadManageHook scratchpads <+> manageHook defaults
-                    , layoutHook = avoidStruts $ layoutHook defaults
-                    , logHook = myLogHook xmproc0
+            xmproc0 <- spawnPipe "xmobar -x 0 $HOME/.config/xmobar/xmobarrc"
+            xmonad $ docks $ ewmh defaults {
+                    manageHook = namedScratchpadManageHook scratchpads <+> manageHook defaults
+                    , layoutHook = layoutHook defaults
+                    , logHook = currentWorkspaceOnTop >> myLogHook xmproc0
                     }
         else do
-            xmproc0 <- spawnPipe "xmobar -x 0 /home/alexgum/.config/xmobar/xmobarrc"
-            xmproc1 <- spawnPipe "xmobar -x 1 /home/alexgum/.config/xmobar/xmobarrc1"
-            xmonad $ docks defaults {
-                    manageHook = manageDocks <+> namedScratchpadManageHook scratchpads <+> manageHook defaults
-                    , layoutHook = avoidStruts $ layoutHook defaults
-                    , logHook = myLogHook xmproc0 >> myLogHook xmproc1
+            xmproc0 <- spawnPipe "xmobar -x 0 $HOME/.config/xmobar/xmobarrc"
+            xmproc1 <- spawnPipe "xmobar -x 1 $HOME/.config/xmobar/xmobarrc1"
+            xmonad $ docks $ ewmh defaults {
+                    manageHook = namedScratchpadManageHook scratchpads <+> manageHook defaults
+                    , layoutHook = layoutHook defaults
+                    , logHook = currentWorkspaceOnTop >> myLogHook xmproc0 >> myLogHook xmproc1
                     }
 ```
 
 Each time when `xmobar` is restarted, it re-detects number of displays and spawns necessary number of bars.
 
-The only exception is **mirror** mode (`xrandr --output eDP --primary --auto --output HDMI-A-0 --auto --same-as eDP`), then no `xmobar` restart is needed because I want to keep main screen `xmobar` being projected.
+The only exception is **mirror** mode (`xrandr --output eDP-1 --primary --auto --output HDMI-1 --auto --same-as eDP-1`), then no `xmobar` restart is needed because I want to keep main screen `xmobar` being projected.

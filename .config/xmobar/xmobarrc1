@@ -1,13 +1,11 @@
 Config { 
-       font = "xft:Hack Nerd Font:style=Regular:size=12:antialias=true:hinting=true"
-       , additionalFonts = [ "xft:Font Awesome 5 Free:style=Solid:size=12:antialias=true"
-                             , "xft:Icons:size=12:antialias=true:hinting=true"
+       font = "xft:Hack Nerd Font:style=Regular:size=11:antialias=true:hinting=light"
+       , additionalFonts = [ "xft:Font Awesome 5 Free:style=Solid:size=11:antialias=true:hinting=light"
                            ]
        , borderColor = "black"
        , border = NoBorder
-       , bgColor = "#1D3030"
-       , fgColor = "#F5F5DC"
-       , alpha = 245
+       , bgColor = "#31353D"
+       , fgColor = "#D9D9D9"
        , position = TopW L 100
        , iconOffset = -1
        , lowerOnStart = True
@@ -18,16 +16,21 @@ Config {
        , allDesktops = False
        , overrideRedirect = True
        , commands = [ Run UnsafeStdinReader
-                    , Run Com "/home/alexgum/.scripts/xmobar-date" [] "date" 600 
+                    , Run Cpu ["-t", " :<total>", "-L","3","-H","70","--normal","#D9D9D9","--high","red"] 200
+                    , Run Com "/home/alexgum/.scripts/cputemp" [] "cputemp" 200
+                    , Run Com "cat" ["/tmp/xmobar-date"] "date" 10
                     , Run Com "/home/alexgum/.scripts/rshift-start" ["-status"] "redshift" 30
                     , Run Com "/home/alexgum/.scripts/battery-xmobar" [] "mybattery" 300
                     , Run Com "head" ["-n1","/tmp/displaymode"] "dmode" 10
-                    , Run Com "head" ["-n1","/tmp/sound_output_status"] "sound" 10
-                    , Run Com "/home/alexgum/.scripts/monbrightness-xmobar" [] "brightness" 50
-                    , Run Com "/home/alexgum/.scripts/wgstatus-xmobar" [] "wgstatus" 10
+                    , Run Com "/home/alexgum/.scripts/python/output-device-switch.py" ["-status"] "sound" 25
+                    , Run Com "/home/alexgum/.scripts/python/input-device-switch.py" ["-status"] "microphone" 25
+                    , Run Com "/home/alexgum/.scripts/monbrightness-xmobar" ["2"] "brightness" 50
+                    , Run Com "cat" ["/tmp/wgstatus"] "wgstatus" 10
                     , Run Com "/home/alexgum/.scripts/mymounts" [] "mymounts" 300
-                    , Run Com "cat" ["/tmp/mycheckupdates"] "mycheckupd" 3000
-                    , Run Kbd [("us", "<icon=22xus-flag.xpm/>"),("de", "<icon=22xgermany-flag.xpm/>"),("ru", "<icon=22xrussia-flag.xpm/>")]
+                    , Run Com "cat" ["/tmp/mycheckupdates"] "mycheckupd" 100
+                    , Run Com "tail" ["-n1","/tmp/display_num"] "display_num" 100
+                    --, Run Kbd [("us", "<icon=22xus-flag.xpm/>"),("de", "<icon=22xgermany-flag.xpm/>"),("ru", "<icon=22xrussia-flag.xpm/>")]
+                    , Run Kbd [("us", "US"),("de", "DE"),("ru", "RU")]
                     , Run BatteryP ["BAT0"]
                                    ["-t", "<fc=#7FFF00></fc><timeleft>"
                                    , "-L", "10", "-H", "80"
@@ -37,5 +40,5 @@ Config {
                     ]
        , sepChar = "%"
        , alignSep = "}{"
-       , template = " %UnsafeStdinReader% } <box type=Bottom offset=L4 width=2><action=`xdotool key super+F6`>%dmode%</action></box> %brightness%    <box type=Bottom offset=L4 width=2><action=`/home/alexgum/.scripts/mymounts -show`>%mymounts%</action></box> <box type=Bottom offset=L4 width=2><action=`/home/alexgum/.scripts/rshift-start -toggle`>%redshift%</action></box> <box type=Bottom width=2><action=`/home/alexgum/.scripts/output-device-switch -toggle`><fc=#FFB2FF>%sound%</fc></action></box> <fc=#32CD32>%wgstatus%</fc>{%mycheckupd% <action=`betterlockscreen -l`> <box type=Bottom width=2 offset=L2> </box> </action><box type=HBoth mr=2 width=1><action=`xdotool key super+BackSpace`> <box type=Bottom offset=L4 width=2> </box> </action></box> %mybattery%%battery% <box type=HBoth width=1> %date% </box><action=`xkb-switch -n`> <box type=Bottom width=2>%kbd%</box> </action>"
+       , template = " %UnsafeStdinReader% }{ %display_num%<box type=Bottom offset=L0 width=2><action=`/home/alexgum/.scripts/displayselect-dmenu`>%dmode%</action></box>%brightness% <box type=Bottom offset=L4 width=2><action=`/home/alexgum/.scripts/mycheckupdates -list-updates`>%mycheckupd%</action></box>%wgstatus% <box type=Bottom offset=L4 width=2><action=`/home/alexgum/.scripts/mymounts -show`>%mymounts%</action></box> <box type=Bottom offset=L4 width=2><action=`/home/alexgum/.scripts/rshift-start -toggle`>%redshift%</action></box>  <box type=Bottom offset=L4 width=2><action=`/home/alexgum/.scripts/python/output-device-switch.py -toggle`>%sound%</action>:<action=`/home/alexgum/.scripts/python/input-device-switch.py -toggle`>%microphone%</action></box>  %cpu%|%cputemp%  %mybattery%%battery% <action=`/home/alexgum/.scripts/xmobar-date -long`><fc=#E6AC00> %date% </fc></action> <box type=Bottom width=2><action=`xkb-switch -n`>%kbd%</action></box> "
        }

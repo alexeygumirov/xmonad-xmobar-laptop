@@ -1,10 +1,10 @@
 #!/bin/sh
 
-WGSTATUS="$(wg show 2>&1 | grep wg0)"
+wgstatus="$(wg show 2>&1 | grep wg0)"
 
-if [ -z "${WGSTATUS}" ]
+if [ -z "${wgstatus}" ]
 then
     printf "" > /tmp/wgstatus
 else
-    printf " " > /tmp/wgstatus
+    printf "  " > /tmp/wgstatus
 fi

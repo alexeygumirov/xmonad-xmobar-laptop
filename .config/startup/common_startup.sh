@@ -4,36 +4,23 @@ export QT_SCREEN_SCALE_FACTORS=1
 export QT_SCALE_FACTOR=1
 export QT_QPA_PLATFORMTHEME="qt5ct"
 export GTK_THEME="Matcha-azul"
+export XDG_CURRENT_DESKTOP="XFCE"
 
-setxkbmap us,ru,de -option -option 'grp:rshift_toggle,caps:ctrl_modifier'
+setxkbmap us,ru -option -option 'grp:rshift_toggle,caps:ctrl_modifier'
 xinput disable "SynPS/2 Synaptics TouchPad"
 xsetroot -cursor_name left_ptr # setup cursor before xmonad and xmobar are launched. Otherwise cursor theme is not working on xmobar and trayer.
-[ -f ~/.Xresources ] && xrdb ~/.Xresources
+[ -f $HOME/.Xresources ] && xrdb $HOME/.Xresources
 
-# maintenance of the ssh-agent
-ssh-add -l &>/dev/null
-if [ "$?" = "2" ]; then
-  test -r ~/.ssh-agent && eval "$(<~/.ssh-agent)" >/dev/null
-  ssh-add -l &>/dev/null
-  if [ "$?" = "2" ]; then
-    (umask 066; ssh-agent > ~/.ssh-agent)
-    eval "$(<~/.ssh-agent)" >/dev/null
-    ssh-add
-  fi
-fi
-
-/home/alexgum/.scripts/displaymode &
-[ -x /usr/bin/nitrogen ] && (nitrogen --restore &)
-[ -x /usr/lib/xfce4/notifyd/xfce4-notifyd ] && ([ -z "$(pgrep notifyd)" ] && /usr/lib/xfce4/notifyd/xfce4-notifyd >/dev/null 2>&1 &)
+$HOME/.scripts/displaymode &
+[ -x /usr/bin/dunst ] && (dunst >/dev/null 2>&1 &)
 [ -x /usr/bin/nm-applet ] && (nm-applet 2> /dev/null &)
 [ -x /usr/bin/volumeicon ] && (volumeicon 2> /dev/null &)
 [ -x /usr/bin/xfce4-clipman ] && (xfce4-clipman 2> /dev/null &)
-/home/alexgum/.scripts/myidleswitch -off
-[ -x /usr/bin/rclone ] && (/home/alexgum/.scripts/rclone-cron &)
-/home/alexgum/.scripts/rshift-start -launch
-(/home/alexgum/.scripts/wgstatus &)
+$HOME/.scripts/myidleswitch -off
+$HOME/.scripts/rshift-start -launch &
+($HOME/.scripts/wgstatus &)
 [ -x /usr/bin/imwheel ] && imwheel
-/home/alexgum/.scripts/mycheckupdates &
-(udiskie -ANs &)
+$HOME/.scripts/mycheckupdates &
+(udiskie -ACNs &)
 
-(/home/alexgum/.config/startup/startup-loop.sh -start &)
+($HOME/.config/startup/startup-loop.sh -start &)

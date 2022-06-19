@@ -1,14 +1,26 @@
 #!/bin/sh
 
 PLAYBACK_STATE=$(amixer | grep "Playback" | fgrep "[off]")
-CURRENT_PLAYBACK_VOLUME=$(amixer get 'Master' | tail -n1 | cut -d'[' -f2 | cut -d'%' -f1)
+DEFAULT_SINK=$(pactl info | grep "^Default Sink" | awk '{print $3}')
+DEFAULT_SINK_ID=$(pactl list sinks short | grep "$DEFAULT_SINK" | awk '{print $1}' | tail -n1)
+# CURRENT_PLAYBACK_VOLUME=$(amixer get 'Master' | tail -n1 | cut -d'[' -f2 | cut -d'%' -f1)
+CURRENT_PLAYBACK_VOLUME=$(pactl get-sink-volume "$DEFAULT_SINK_ID" | grep Volume | awk '{print $5}' | tr -d '%')
+
 
 [ ! -e /tmp/volumexob ] && mkfifo /tmp/volumexob
 
-(tail -f /tmp/volumexob | xob -m 150 -t 2000 -s volume > /dev/null 2> /dev/null &)
+if [ -z $(grep "m$" /tmp/displaymode) ]
+then
+    profile=volume_left
+else
+    profile=volume_right
+fi
+
+(tail -f /tmp/volumexob | xob -m 100 -t 2000 -s "$profile" > /dev/null 2> /dev/null &)
 
 volumeratioshow(){
-    amixer get 'Master' | tail -n1 | cut -d'[' -f2 | cut -d'%' -f1 > /tmp/volumexob
+    # amixer get Master | tail -n1 | cut -d'[' -f2 | cut -d'%' -f1 > /tmp/volumexob
+    pactl get-sink-volume "$DEFAULT_SINK_ID" | grep Volume | awk '{print $5}' | tr -d '%' > /tmp/volumexob
 }
 
 
@@ -18,28 +30,16 @@ case $1 in
     -up)
         if [ ! -z "$PLAYBACK_STATE" ]
         then
-            pactl set-sink-mute @DEFAULT_SINK@ 0
+            pactl set-sink-mute "$DEFAULT_SINK_ID" toggle
             volumeratioshow
         fi
         case $CURRENT_PLAYBACK_VOLUME in
-            150)
-                pactl set-sink-volume @DEFAULT_SINK@ 150%
-                printf "150\n" > /tmp/volumexob
-                ;;
-            14[0-9])
-                pactl set-sink-volume @DEFAULT_SINK@ 150%
-                printf "150\n" > /tmp/volumexob
-                ;;
-            1[0-3][0-9])
-                pactl set-sink-volume @DEFAULT_SINK@ +10%
+            [0-2])
+                pactl set-sink-volume "$DEFAULT_SINK_ID" 5%
                 volumeratioshow
                 ;;
-            [1-9][0-9])
-                pactl set-sink-volume @DEFAULT_SINK@ +10%
-                volumeratioshow
-                ;;
-            [0-9])
-                pactl set-sink-volume @DEFAULT_SINK@ +10%
+            *)
+                pactl set-sink-volume "$DEFAULT_SINK_ID" +5%
                 volumeratioshow
                 ;;
         esac
@@ -47,45 +47,31 @@ case $1 in
     -down)
         if [ ! -z "$PLAYBACK_STATE" ]
         then
-            pactl set-sink-mute @DEFAULT_SINK@ 0
+            pactl set-sink-mute "$DEFAULT_SINK_ID" toggle
             volumeratioshow
         fi
         case $CURRENT_PLAYBACK_VOLUME in
-            150)
-                pactl set-sink-volume @DEFAULT_SINK@ -10%
-                volumeratioshow
-                ;;
-            1[0-4][0-9])
-                pactl set-sink-volume @DEFAULT_SINK@ -10%
-                volumeratioshow
-                ;;
-            [2-9][0-9])
-                pactl set-sink-volume @DEFAULT_SINK@ -10%
-                volumeratioshow
-                ;;
-            1[1-9])
-                pactl set-sink-volume @DEFAULT_SINK@ -10%
-                volumeratioshow
-                ;;
-            10)
-                pactl set-sink-mute @DEFAULT_SINK@ 1
+            [0-4])
+                pactl set-sink-mute "$DEFAULT_SINK_ID" 1
                 printf "0\n" > /tmp/volumexob
                 ;;
-            [0-9])
-                pactl set-sink-mute @DEFAULT_SINK@ 1
-                printf "0\n" > /tmp/volumexob
+            *)
+                pactl set-sink-volume "$DEFAULT_SINK_ID" -5%
+                volumeratioshow
                 ;;
         esac
         ;;
     -mutetoggle)
         if [ ! -z "$PLAYBACK_STATE" ]
         then
-            pactl set-sink-mute @DEFAULT_SINK@ 0
+            pactl set-sink-mute "$DEFAULT_SINK_ID" toggle
+            # amixer set Master toggle
             volumeratioshow
         fi
         if [ -z "$PLAYBACK_STATE" ]
         then
-            pactl set-sink-mute @DEFAULT_SINK@ 1
+            pactl set-sink-mute "$DEFAULT_SINK_ID" toggle
+            # amixer set Master toggle
             printf "0\n" > /tmp/volumexob
         fi
         ;;

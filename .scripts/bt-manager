@@ -1,0 +1,40 @@
+#!/bin/sh
+
+bluetooth_adapter_name="hci0"
+bluetooth_adapter_id=$(sudo rfkill list | grep "${bluetooth_adapter_name}" | cut -c 1)
+bluetooth_adapter_status=$(sudo rfkill -o SOFT -n list $bluetooth_adapter_id)
+
+bluetooth_menu="connect/on
+disconnect/off"
+
+action=$(printf "${bluetooth_menu}\n" | rofi -dmenu -font 'Hack Nerd Font 14' -yoffset 24 -no-fixed-num-lines -p " " -theme Paper)
+
+case "${action}" in
+    "connect/on") 
+        [ "${bluetooth_adapter_status}" = "blocked" ] && sudo rfkill unblock $bluetooth_adapter_id
+        bluetooth_devices=$(bluetoothctl devices | awk '{print $3" "$2}')
+        device=$(printf "\n${bluetooth_devices}\n" | rofi -dmenu -font 'Hack Nerd Font 14' -yoffset 24 -no-fixed-num-lines -p " device" -theme Paper)
+        if [ ! -z "${device}" ]
+        then
+            device_mac=$(printf "${device}" | cut -d' ' -f2)
+            bluetoothctl connect "${device_mac}"
+        else
+            exit
+        fi
+        ;;
+    "disconnect/off") 
+        [ "${bluetooth_adapter_status}" = "blocked" ] && exit
+        bluetooth_devices=$(bluetoothctl devices | awk '{print $3" "$2}')
+        device=$(printf "\n${bluetooth_devices}\n" | rofi -dmenu -font 'Hack Nerd Font 14' -yoffset 24 -no-fixed-num-lines -p " device" -theme Paper)
+        if [ ! -z "${device}" ]
+        then
+            device_mac=$(printf "${device}" | cut -d' ' -f2)
+            bluetoothctl disconnect "${device_mac}"
+        else
+            sudo rfkill block $bluetooth_adapter_id
+        fi
+        ;;
+esac
+
+
+

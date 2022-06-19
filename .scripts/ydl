@@ -1,0 +1,194 @@
+#!/bin/sh
+
+content_options_list="video
+audio"
+
+extra_options_list="default
+extra"
+
+download_options_list="single
+playlist complete
+playlist items"
+
+video_options_list="1440p
+1080p
+best video"
+
+download_speeds_list="Max
+40M
+20M
+10M
+5M
+1M"
+
+YOUTUBEDLDIR="~/Downloads/youtube-dl/"
+
+url=$(rofi -dmenu -font 'Hack Nerd Font 14' -yoffset 24 -no-fixed-num-lines -p "url" -theme Paper)
+[ -z "${url}" ] && exit 1
+
+content_option=$(printf "$content_options_list"| rofi -dmenu -font 'Hack Nerd Font 14' -p 'Content type' -l 2 -yoffset 24 -i -theme Paper)
+
+case "${content_option}" in
+    "video") 
+        extra_option=$(printf "$extra_options_list"| rofi -dmenu -font 'Hack Nerd Font 14' -p 'Options' -l 3 -yoffset 24 -i -theme Paper)
+        if [ "${extra_option}" = "default" ]
+        then
+            video_quality_option="1440p"
+            download_option="single"
+            download_speed="Max"
+        else
+            download_option=$(printf "$download_options_list"| rofi -dmenu -font 'Hack Nerd Font 14' -p 'Download options' -l 3 -yoffset 24 -i -theme Paper)
+            video_quality_option=$(printf "$video_options_list"| rofi -dmenu -font 'Hack Nerd Font 14' -p 'Video format' -l 3 -yoffset 24 -i -theme Paper)
+            download_speed=$(printf "$download_speeds_list" | rofi -dmenu -font 'Hack Nerd Font 14' -p 'Download options' -l 6 -yoffset 24 -i -theme Paper)
+        fi
+        socket="/tmp/yt-dl-queue.ts"
+        temp_dir="/tmp/tsp-yt-dl"
+        today=$(date "+%Y-%m-%d")
+        down_history="youtube-list-complete-${today}"
+        case "${video_quality_option}" in
+            "1440p")
+                download_format="bv[height<=1440][ext=mp4]+ba/bv[height<=1440]+ba/bv*+ba/b"
+                ;;
+            "1080p")
+                download_format="bv[height<=1080][ext=mp4]+ba/bv[height<=1080]+ba/bv*+ba/b"
+                ;;
+            "best video")
+                download_format="bv*+ba/b"
+                ;;
+        esac
+        case "${download_option}" in
+            "single")
+                link=$(printf '%s' "${url}" | cut -d '&' -f1)
+                output_format="${YOUTUBEDLDIR}${today}/%(uploader)s/%(upload_date)s-%(title)s_%(height)sp.%(ext)s"
+                title=$(yt-dlp --get-title "${link}")
+                if [ ! -e "${HOME}/Downloads/${down_history}" ]; then
+                    printf '%s\n' "------ URLs added at $(date) --------" > "${HOME}/Downloads/${down_history}"
+                else
+                    printf '\n' >> "${HOME}/Downloads/${down_history}"
+                    printf '%s\n' "------ URLs added at $(date) --------" >> "${HOME}/Downloads/${down_history}"
+                fi
+                printf '%s\n' "VIDEO : ${title} - ${link}" >> "${HOME}/Downloads/${down_history}"
+                if [ "${download_speed}" = "Max" ]
+                then
+                    TS_SOCKET="${socket}" TMPDIR="${temp_dir}" tsp yt-dlp -f "${download_format}"  --merge-output-format "mp4" -o "${output_format}" "${link}"
+                else
+                    TS_SOCKET="${socket}" TMPDIR="${temp_dir}" tsp yt-dlp -f "${download_format}"  --merge-output-format "mp4" -r "${download_speed}" -o "${output_format}" "${link}"
+                fi
+                sleep 1
+                ;;
+            "playlist complete")
+                link="${url}"
+                output_format="${YOUTUBEDLDIR}%(playlist)s/%(playlist_index)s-%(title)s_%(height)sp.%(ext)s"
+                title=$(yt-dlp --get-title "${link}")
+                if [ ! -e "${HOME}/Downloads/${down_history}" ]; then
+                    printf '%s\n' "------ URLs added at $(date) --------" > "${HOME}/Downloads/${down_history}"
+                else
+                    printf '\n' >> "${HOME}/Downloads/${down_history}"
+                    printf '%s\n' "------ URLs added at $(date) --------" >> "${HOME}/Downloads/${down_history}"
+                fi
+                printf '%s\n%s\n' "PLAYLIST VIDEO : ${link}" "${title}" >> "${HOME}/Downloads/${down_history}"
+                if [ "${download_speed}" = "Max" ]
+                then
+                    TS_SOCKET="${socket}" TMPDIR="${temp_dir}" tsp yt-dlp -f "${download_format}" -i --yes-playlist --merge-output-format "mp4" -o "${output_format}" "${link}"
+                else
+                    TS_SOCKET="${socket}" TMPDIR="${temp_dir}" tsp yt-dlp -f "${download_format}" -i --yes-playlist --merge-output-format "mp4" -r "${download_speed}" -o "${output_format}" "${link}"
+                fi
+                ;;
+            "playlist items")
+                link="${url}"
+                output_format="${YOUTUBEDLDIR}%(playlist)s/%(playlist_index)s-%(title)s_%(height)sp.%(ext)s"
+                items=$(rofi -dmenu -font 'Hack Nerd Font 14' -yoffset 24 -no-fixed-num-lines -p "Playlist items list" -theme Paper)
+                [ -z "${items}" ] && exit 1
+                title=$(yt-dlp --playlist-items "${items}" --get-title "${link}")
+                if [ ! -e "${HOME}/Downloads/${down_history}" ]; then
+                    printf '%s\n' "------ URLs added at $(date) --------" > "${HOME}/Downloads/${down_history}"
+                else
+                    printf '\n' >> "${HOME}/Downloads/${down_history}"
+                    printf '%s\n' "------ URLs added at $(date) --------" >> "${HOME}/Downloads/${down_history}"
+                fi
+                printf "%s\n" "PLAYLIST VIDEO : ${title} - ${link} : ITEMS : ${items}" >> "${HOME}/Downloads/${down_history}"
+                printf '%s\n%s\n' "PLAYLIST VIDEO : ${link} : ITEMS : ${items}" "${title}" >> "${HOME}/Downloads/${down_history}"
+                if [ "${download_speed}" = "Max" ]
+                then
+                    TS_SOCKET="${socket}" TMPDIR="${temp_dir}" tsp yt-dlp -f "${download_format}" -i --yes-playlist --merge-output-format "mp4" -o "${output_format}" --playlist-items "${items}" "${link}"
+                else
+                    TS_SOCKET="${socket}" TMPDIR="${temp_dir}" tsp yt-dlp -f "${download_format}" -i --yes-playlist --merge-output-format "mp4" -r "${download_speed}" -o "${output_format}" --playlist-items "${items}" "${link}"
+                fi
+                ;;
+        esac
+        ;;
+    "audio")
+        extra_option=$(printf "$extra_options_list"| rofi -dmenu -font 'Hack Nerd Font 14' -p 'Options' -l 3 -yoffset 24 -i -theme Paper)
+        if [ "${extra_option}" = "default" ]
+        then
+            download_option="single"
+            download_speed="Max"
+        else
+            download_option=$(printf "$download_options_list"| rofi -dmenu -font 'Hack Nerd Font 14' -p 'Download options' -l 3 -yoffset 24 -i -theme Paper)
+            download_speed=$(printf "$download_speeds_list" | rofi -dmenu -font 'Hack Nerd Font 14' -p 'Download options' -l 6 -yoffset 24 -i -theme Paper)
+        fi
+        socket="/tmp/yt-dl-queue.ts"
+        temp_dir="/tmp/tsp-yt-dl"
+        today=$(date "+%Y-%m-%d")
+        down_history="youtube-list-complete-${today}"
+        case "${download_option}" in
+            "single")
+                link=$(printf '%s' "${url}" | cut -d '&' -f1)
+                output_format="${YOUTUBEDLDIR}mp3/${today}/%(uploader)s/%(upload_date)s-%(title)s_%(height)sp.%(ext)s"
+                title=$(yt-dlp --get-title "${link}")
+                if [ ! -e "${HOME}/Downloads/${down_history}" ]; then
+                    printf '%s\n' "------ URLs added at $(date) --------" > "${HOME}/Downloads/${down_history}"
+                else
+                    printf '\n' >> "${HOME}/Downloads/${down_history}"
+                    printf '%s\n' "------ URLs added at $(date) --------" >> "${HOME}/Downloads/${down_history}"
+                fi
+                printf '%s\n' "AUDIO : ${title} - ${link}" >> "${HOME}/Downloads/${down_history}"
+                if [ "${download_speed}" = "Max" ]
+                then
+                    TS_SOCKET="${socket}" TMPDIR="${temp_dir}" tsp yt-dlp -f "ba" -x --audio-format mp3 --audio-quality 2 --embed-thumbnail --add-metadata -o "${output_format}" "${link}"
+                else
+                    TS_SOCKET="${socket}" TMPDIR="${temp_dir}" tsp yt-dlp -f "ba" -x --audio-format mp3 --audio-quality 2 --embed-thumbnail --add-metadata -r "${download_speed}" -o "${output_format}" "${link}"
+                fi
+                sleep 1
+                ;;
+            "playlist complete")
+                link="${url}"
+                output_format="${YOUTUBEDLDIR}mp3/%(playlist)s/%(playlist_index)s-%(title)s_%(height)sp.%(ext)s"
+                title=$(yt-dlp --get-title "${link}")
+                if [ ! -e "${HOME}/Downloads/${down_history}" ]; then
+                    printf '%s\n' "------ URLs added at $(date) --------" > "${HOME}/Downloads/${down_history}"
+                else
+                    printf '\n' >> "${HOME}/Downloads/${down_history}"
+                    printf '%s\n' "------ URLs added at $(date) --------" >> "${HOME}/Downloads/${down_history}"
+                fi
+                printf '%s\n%s\n' "PLAYLIST AUDIO : ${link}" "${title}" >> "${HOME}/Downloads/${down_history}"
+                if [ "${download_speed}" = "Max" ]
+                then
+                    TS_SOCKET="${socket}" TMPDIR="${temp_dir}" tsp yt-dlp -f "ba" -x --audio-format mp3 --audio-quality 2 --embed-thumbnail --add-metadata -i --yes-playlist -o "${output_format}" "${link}"
+                else
+                    TS_SOCKET="${socket}" TMPDIR="${temp_dir}" tsp yt-dlp -f "ba" -x --audio-format mp3 --audio-quality 2 --embed-thumbnail --add-metadata -i --yes-playlist -r "${download_speed}" -o "${output_format}" "${link}"
+                fi
+                ;;
+            "playlist items")
+                link="${url}"
+                output_format="${YOUTUBEDLDIR}mp3/%(playlist)s/%(playlist_index)s-%(title)s_%(height)sp.%(ext)s"
+                items=$(rofi -dmenu -font 'Hack Nerd Font 14' -yoffset 24 -no-fixed-num-lines -p "Playlist items list" -theme Paper)
+                [ -z "${items}" ] && exit 1
+                title=$(yt-dlp --playlist-items "${items}" --get-title "${link}")
+                if [ ! -e "${HOME}/Downloads/${down_history}" ]; then
+                    printf '%s\n' "------ URLs added at $(date) --------" > "${HOME}/Downloads/${down_history}"
+                else
+                    printf '\n' >> "${HOME}/Downloads/${down_history}"
+                    printf '%s\n' "------ URLs added at $(date) --------" >> "${HOME}/Downloads/${down_history}"
+                fi
+                printf '%s\n%s\n' "PLAYLIST AUDIO : ${link} : ITEMS : ${items}" "${title}" >> "${HOME}/Downloads/${down_history}"
+                if [ "${download_speed}" = "Max" ]
+                then
+                    TS_SOCKET="${socket}" TMPDIR="${temp_dir}" tsp yt-dlp -f "ba" -x --audio-format mp3 --audio-quality 2 --embed-thumbnail --add-metadata -i --yes-playlist -o "${output_format}" --playlist-items "${items}" "${link}"
+                else
+                    TS_SOCKET="${socket}" TMPDIR="${temp_dir}" tsp yt-dlp -f "ba" -x --audio-format mp3 --audio-quality 2 --embed-thumbnail --add-metadata -i --yes-playlist -r "${download_speed}" -o "${output_format}" --playlist-items "${items}" "${link}"
+                fi
+                ;;
+        esac
+        ;;
+esac

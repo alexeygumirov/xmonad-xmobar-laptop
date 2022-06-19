@@ -1,0 +1,24 @@
+#!/bin/sh
+
+# Get user selection via dmenu from emoji file.
+# chosen=$(cut -d ';' -f1 ~/.local/share/myfiles/emoji | dmenu -fn 'Hack Nerd Font-16' -i -l 10 -y 24 -w 500 | sed "s/ .*//")
+
+# Exit if none chosen.
+
+# If you run this command with an argument, it will automatically insert the
+# character. Otherwise, show a message that the emoji has been copied.
+
+case "$1" in
+    "-insert")
+        chosen=$(cut -d ';' -f1 ~/.local/share/myfiles/emoji | rofi -dmenu -p "Insert emoji" -matching normal -location 7 -yoffset -30 -xoffset 30 -i | sed "s/ .*//")
+        [ -z "$chosen" ] && exit
+        printf "$chosen" | tr -d '\n' | xsel -ib
+        xdotool type "$chosen"
+        ;;
+    "-copy")
+        chosen_copy=$(cut -d ';' -f1 ~/.local/share/myfiles/emoji | rofi -dmenu -p "Copy emoji" -matching normal -location 7 -yoffset -30 -xoffset 30 -i | sed "s/ .*//")
+        [ -z "$chosen_copy" ] && exit
+        printf "$chosen_copy" | tr -d '\n' | xsel -ib
+        xdotool key ctrl+v
+        ;;
+esac

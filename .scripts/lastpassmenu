@@ -1,0 +1,25 @@
+#!/bin/sh
+
+export LPASS_ASKPASS=$HOME/.scripts/rpass
+[ -z "$(pgrep lpass)" ] && lpass login --trust "jenotaccount@gmx.de"
+
+chosen_entry=$(lpass ls --long | cut -d' ' -f3- | rofi -dmenu -font 'Hack Nerd Font 14' -p 'Choose password entry' -l 5 -yoffset 24 -i -theme Paper)
+# printf "${chosen_entry}"
+
+if [ ! -z "${chosen_entry}" ]; then
+    chosen_id=$(printf "${chosen_entry}" | cut -d'[' -f2 | sed 's/id: //g; s/\]//g')
+    choice="Copy login\nCopy password"
+    choice_opt=$(printf "${choice}" | rofi -dmenu -font 'Hack Nerd Font 14' -p 'Choose password entry' -l 5 -yoffset 24 -theme Paper)
+    case "${choice_opt}" in
+        "Copy password")
+            lpass show --password ${chosen_id} | xsel -is -t 10000
+            sleep 1s
+            xdotool type "$(xsel -os)"
+            ;;
+        *)
+            lpass show --username ${chosen_id} | xsel -is -t 10000
+            sleep 1s
+            xdotool type "$(xsel -os)"
+            ;;
+    esac
+fi

@@ -1,0 +1,8 @@
+#!/bin/sh
+
+if setxkbmap -query | grep -q us,ru
+then
+    setxkbmap de,ru -option -option 'grp:rshift_toggle,caps:ctrl_modifier'
+else
+    setxkbmap us,ru -option -option 'grp:rshift_toggle,caps:ctrl_modifier'
+fi

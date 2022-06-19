@@ -1,34 +1,39 @@
 #!/bin/sh
 
-MAX_BRIGHTNESS=255
-MIN_BRIGHTNESS=1
-STEP=20
-STEP_MIN=$(( $STEP + 1 ))
+max_brightness=255
+min_brightness=35
+step_size=15
 
-CURRENT_BRIGHTNESS=$(pkexec /usr/bin/xfpm-power-backlight-helper --get-brightness)
-echo $CURRENT_BRIGHTNESS
+current_brightness=$(pkexec /usr/bin/xfpm-power-backlight-helper --get-brightness)
 
 [ ! -e /tmp/brightnessxob ] && mkfifo /tmp/brightnessxob
 
-(tail -f /tmp/brightnessxob | xob -m 255 -t 2000 -s backlight > /dev/null 2> /dev/null &)
+if [ -z $(grep "m$" /tmp/displaymode) ]
+then
+    profile=backlight_left
+else
+    profile=backlight_right
+fi
+
+(tail -f /tmp/brightnessxob | xob -m 255 -t 2000 -s "$profile" > /dev/null 2> /dev/null &)
 
 case "$1" in
     "-up")
-        if [ $CURRENT_BRIGHTNESS -ge $(( $MAX_BRIGHTNESS - $STEP )) ]; then
-            pkexec /usr/bin/xfpm-power-backlight-helper --set-brightness $MAX_BRIGHTNESS
+        BRIGHTNESS=$(( $current_brightness + $step_size ))
+        if [ $BRIGHTNESS -ge $max_brightness ]; then
+            pkexec /usr/bin/xfpm-power-backlight-helper --set-brightness $max_brightness
             printf "255\n" > /tmp/brightnessxobl
         else
-            BRIGHTNESS=$(( $CURRENT_BRIGHTNESS + $STEP ))
             pkexec /usr/bin/xfpm-power-backlight-helper --set-brightness $BRIGHTNESS
             printf "$BRIGHTNESS\n" > /tmp/brightnessxob
         fi
         ;;
     "-down")
-        if [ $CURRENT_BRIGHTNESS -le $STEP_MIN ]; then
-            pkexec /usr/bin/xfpm-power-backlight-helper --set-brightness $MIN_BRIGHTNESS
-            printf "255\n" > /tmp/brightnessxob
+        BRIGHTNESS=$(( $current_brightness - $step_size )) 
+        if [ $BRIGHTNESS -le $min_brightness ]; then
+            pkexec /usr/bin/xfpm-power-backlight-helper --set-brightness $min_brightness
+            printf "$min_brightness\n" > /tmp/brightnessxob
         else
-            BRIGHTNESS=$(( $CURRENT_BRIGHTNESS - $STEP )) 
             pkexec /usr/bin/xfpm-power-backlight-helper --set-brightness $BRIGHTNESS
             printf "$BRIGHTNESS\n" > /tmp/brightnessxob
         fi

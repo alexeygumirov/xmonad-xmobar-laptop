@@ -1,0 +1,210 @@
+#!/bin/sh
+
+# Internet: Evolution
+
+list="Graphics: GIMP
+Graphics: Krita
+Graphics: Pinta
+Graphics: RawTherapee
+Graphics: XnViewMP
+Internet: Chromium
+Internet: Firefox
+Internet: Pan-Net Mail (FF)
+Internet: Signal
+Internet: Skype
+Internet: Slack
+Internet: Spotify
+Internet: TeamViewer
+Internet: Telegram
+Internet: Thunderbird
+Internet: WhatsApp
+Internet: WireGuardUP
+Internet: WireGuardDOWN
+Internet: Zoom
+Multimedia: Asunder (CD Ripper)
+Multimedia: DeadBeef (Music Player)
+Multimedia: HandBrake
+Multimedia: Easytag
+Office: Draw.io
+Office: GoldenDict
+Office: LibreOffice Calc
+Office: LibreOffice Draw
+Office: LibreOffice Impress
+Office: LibreOffice Math
+Office: LibreOffice Writer
+Office: OnlyOffice Desktop
+Office: XMind Map
+RDP: Windows10-Proxmox
+RDP: Windows10-Local
+System: Barrier
+System: Logout
+System: Power Manager
+System: Printer Setup
+System: Reboot
+System: Seahorse (Keyring)
+System: SSH key add to agent
+System: Shutdown
+System: Sound Output (Toggle)
+System: Switch User
+System: Volume
+System: Virt Manager
+System:Mount: CheckMounts
+System:Mount: Sync/Alex_Backup
+System:Mount: Syno/Alex_Home
+System:Mount: Syno/Books
+System:Mount: Syno/Music
+System:Mount: Syno/Pictures
+System:Mount: Syno/Scans
+System:Mount: Syno/Video
+System:Umount: All CIFS
+System:Umount: Sync/Alex_Backup
+System:Umount: Syno/Alex_Home
+System:Umount: Syno/Books
+System:Umount: Syno/Music
+System:Umount: Syno/Pictures
+System:Umount: Syno/Scans
+System:Umount: Syno/Video
+Utils: Double Commander
+Utils: KVM/QEMU
+Utils: Notepadqq
+Utils: RedShift
+Utils: Scan2PDF
+Utils: Screenkey
+Utils: Simple Scan
+Utils: Calculator (Speedcrunch)
+Utils: Thunar
+Utils: TLP
+Utils: VeraCrypt"
+
+# chosen=$(printf "${list}" | dmenu -fn 'Open Sans Regular-14' -p 'Launch app:' -l 10 -i -x 680 -y 400 -w 560)
+chosen=$(printf "${list}" | rofi -dmenu -font 'Hack Nerd Font 15' -p '' -l 10 -location 0 -i)
+
+case "$chosen" in
+    "Graphics: GIMP") (gimp > /dev/null 2>&1 &) ;;
+    "Graphics: Krita") (krita > /dev/null 2>&1 &) ;;
+    "Graphics: Pinta") (pinta > /dev/null 2>&1 &) ;;
+    "Graphics: RawTherapee") (rawtherapee > /dev/null 2>&1 &) ;;
+    "Graphics: XnViewMP") (/home/alexgum/.scripts/qt-launch "xnviewmp" &) ;;
+    "Internet: Chromium") (chromium > /dev/null 2>&1 &) ;;
+    "Internet: Firefox") (firefox -P default-release > /dev/null 2>&1 &) ;;
+    "Internet: Pan-Net Mail (FF)") (firefox --no-remote -P Pan-Net https://mail.dt-one.com >/dev/null 2>&1 &) ;; 
+    "Internet: Signal") (signal-desktop > /dev/null 2>&1 &) ;;
+    "Internet: Skype") (skypeforlinux > /dev/null 2>&1 &) ;;
+    "Internet: Slack")
+        if [ -z "$(pgrep -f slack)" ]
+        then
+            (slack > /dev/null 2>&1 &)
+        else
+            pkill -f slack && (slack > /dev/null 2>&1 &)
+        fi
+        ;;
+    "Internet: Spotify") (spotify > /dev/null 2>&1 &) ;;
+    "Internet: TeamViewer") (teamviewer > /dev/null 2>&1 &) ;;
+    "Internet: Telegram") (telegram-desktop > /dev/null 2>&1 &) ;;
+    "Internet: Thunderbird") (thunderbird 2> /dev/null &) ;;
+    "Internet: WhatsApp") (firefox --kiosk -P WhatsApp --new-window web.whatsapp.com > /dev/null 2>&1 &) ;;
+    "Internet: WireGuardUP") SUDO_ASKPASS=/home/alexgum/.scripts/rpass sudo -A wg-quick up wg0 && /home/alexgum/.scripts/wgstatus ;;
+    "Internet: WireGuardDOWN") SUDO_ASKPASS=/home/alexgum/.scripts/rpass sudo -A wg-quick down wg0 && /home/alexgum/.scripts/wgstatus ;;
+    "Internet: Zoom") (/home/alexgum/.scripts/qt-launch "zoom" &) ;;
+    "Multimedia: Asunder (CD Ripper)") asunder 2> /dev/null & ;;
+    "Multimedia: DeadBeef (Music Player)") (deadbeef > /dev/null &) ;;
+    "Multimedia: HandBrake") (ghb 2> /dev/null &) ;;
+    "Multimedia: Easytag") (easytag 2> /dev/null &) ;;
+    "Office: GoldenDict") (/home/alexgum/.scripts/qt-launch "goldendict" &) ;;
+    "Office: Draw.io") (drawio > /dev/null 2>&1 &) ;;
+    "Office: LibreOffice Calc") (localc --nologo > /dev/null 2>&1 &) ;;
+    "Office: LibreOffice Draw") (lodraw --nologo > /dev/null 2>&1 &) ;;
+    "Office: LibreOffice Impress") (loimpress --nologo > /dev/null 2>&1 &) ;;
+    "Office: LibreOffice Math") (lomath --nologo > /dev/null 2>&1 &) ;;
+    "Office: LibreOffice Writer") (lowriter --nologo > /dev/null 2>&1 &) ;;
+    "Office: OnlyOffice Desktop") (onlyoffice --nologo > /dev/null 2>&1 &) ;;
+    "Office: XMind Map") (XMind > /dev/null 2>&1 &) ;;
+    "RDP: Windows10-Proxmox") (/home/alexgum/.scripts/rdp-launcher -win10proxmox > /dev/null 2>&1 &) ;;
+    "RDP: Windows10-Local") (/home/alexgum/.scripts/rdp-launcher -win10local > /dev/null 2>&1 &) ;;
+    "System: Barrier") (barrier > /dev/null 2>&1 &) ;;
+    "System: Logout")
+        # ssh-add -D
+        # tmux kill-server
+        # kill $(who -uH | awk '/^alexgum/ {print $6}')
+        loginctl terminate-session $XDG_SESSION_ID
+        ;;
+    "System: Power Manager") (xfce4-power-manager --customize > /dev/null 2>&1 &) ;;
+    "System: Printer Setup") (system-config-printer > /dev/null 2>&1 &) ;;
+    "System: Reboot") systemctl reboot ;;
+    "System: Seahorse (Keyring)") (seahorse 2> /dev/null &) ;;
+    "System: SSH key add to agent") ( $HOME/.scripts/add-ssh-key.sh ) ;;
+    "System: Shutdown") systemctl poweroff ;;
+    "System: Switch User" ) dm-tool switch-to-greeter ;;
+    "System: Sound Output (Toggle)") ~/.scripts/output-device-switch.py -toggle ;;
+    "System: Volume") (pavucontrol > /dev/null 2>&1 & );;
+    "System: Virt Manager") (virt-manager > /dev/null 2>&1 &) ;;
+    "System:Mount: CheckMounts") ~/.scripts/mymounts -show ;;
+    "System:Mount: Sync/Alex_Backup")
+        ~/.scripts/mymounts -call-mount /mnt/syno/alex_backup
+        ;;
+    "System:Mount: Syno/Alex_Home")
+        ~/.scripts/mymounts -call-mount /mnt/syno/alex_home
+        ;;
+    "System:Mount: Syno/Books")
+        ~/.scripts/mymounts -call-mount /mnt/syno/books
+        ;;
+    "System:Mount: Syno/Music")
+        ~/.scripts/mymounts -call-mount /mnt/syno/music
+        ;;
+    "System:Mount: Syno/Pictures")
+        ~/.scripts/mymounts -call-mount /mnt/syno/pictures
+        ;;
+    "System:Mount: Syno/Scans")
+        ~/.scripts/mymounts -call-mount /mnt/syno/scans
+        ;;
+    "System:Mount: Syno/Video")
+        ~/.scripts/mymounts -call-mount /mnt/syno/video
+        ;;
+    "System:Umount: All CIFS")
+        ~/.scripts/mymounts -call-umall
+        ;;
+    "System:Umount: Sync/Alex_Backup")
+        ~/.scripts/mymounts -call-unmount /mnt/syno/alex_backup
+        ;;
+    "System:Umount: Syno/Alex_Home")
+        ~/.scripts/mymounts -call-unmount /mnt/syno/alex_home
+        ;;
+    "System:Umount: Syno/Books")
+        ~/.scripts/mymounts -call-unmount /mnt/syno/books
+        ;;
+    "System:Umount: Syno/Music")
+        ~/.scripts/mymounts -call-unmount /mnt/syno/music
+        ;;
+    "System:Umount: Syno/Pictures")
+        ~/.scripts/mymounts -call-unmount /mnt/syno/pictures
+        ;;
+    "System:Umount: Syno/Scans")
+        if [ ! -z "$(cat /proc/mounts | grep veracrypt)" ]
+        then
+            veracrypt -d /mnt/syno/scans/scans.hc
+        fi
+        ~/.scripts/mymounts -call-unmount /mnt/syno/scans
+        ;;
+    "System:Umount: Syno/Video")
+        ~/.scripts/mymounts -call-unmount /mnt/syno/video
+        ;;
+    "Utils: Double Commander") (doublecmd -L "/home/alexgum/" -R "/home/alexgum/" --no-splash >/dev/null 2>&1 &) ;;
+    "Utils: KVM/QEMU") /home/alexgum/.scripts/vms-launcher ;;
+    "Utils: Notepadqq") (/home/alexgum/.scripts/qt-launch "notepadqq" &) ;;
+    "Utils: RedShift") /home/alexgum/.scripts/rshift-start -toggle ;;
+    "Utils: Scan2PDF") (gscan2pdf 2> /dev/null &) ;; 
+    "Utils: Screenkey")
+        if [ ! -z "$(pgrep -fa screenkey)" ]
+        then
+            pkill -f screenkey
+        else
+            # screenkey -p fixed -g 50%x5%+50%+3%  
+            (screenkey -p fixed -g 80%x5%+10%-10 --opacity 0.5 --bg-color '#274472' &)
+        fi
+        ;;
+    "Utils: Simple Scan") (simple-scan > /dev/null 2>&1 &) ;; 
+    "Utils: Calculator (Speedcrunch)") (speedcrunch  > /dev/null 2>&1 &) ;;
+    "Utils: TLP") SUDO_ASKPASS=/home/alexgum/.scripts/rpass sudo tlpui ;;
+    "Utils: Thunar") (Thunar > /dev/null 2>&1 &) ;;
+    "Utils: VeraCrypt") (veracrypt  > /dev/null 2>&1 &) ;; 
+esac

@@ -1,0 +1,53 @@
+#!/bin/sh
+
+list_radios="1. Lofi Girl
+2. Chillhop
+3. Box Lofi
+4. The Bootleg Boy
+5. Radio Spinner
+6. SmoothChill"
+
+notification(){
+    notify-send "Now Playing: ${1} ☕️🎶"
+}
+
+main() {
+    length=$(printf "${list_radios}" | wc -l)
+	choice=$(printf "${list_radios}" | rofi -dmenu -location 2 -l $length  -p 'Select radio' -theme-str 'window { width: 300px; }' | cut -d. -f1)
+    radio_name=$(printf "${list_radios}" | grep "^${choice}" | cut -d. -f2)
+
+	case $choice in
+		1)
+			notification "${radio_name}";
+				mpv "https://play.streamafrica.net/lofiradio" &
+			break
+			;;
+		2)
+			notification "${radio_name}";
+				mpv "http://stream.zeno.fm/fyn8eh3h5f8uv" &
+			break
+			;;
+		3)
+			notification "${radio_name}";
+				mpv "http://stream.zeno.fm/f3wvbbqmdg8uv" &
+			break
+			;;
+		4)
+			notification "${radio_name}";
+				mpv "http://stream.zeno.fm/0r0xa792kwzuv" &
+			break
+			;;
+		5)
+			notification "${radio_name}";
+				mpv "https://live.radiospinner.com/lofi-hip-hop-64" &
+			break
+			;;
+		6)
+			notification "${radio_name}";
+				mpv "https://media-ssl.musicradio.com/SmoothChill" &
+			break
+			;;
+	esac
+}
+
+pkill -f "mpv http" || main

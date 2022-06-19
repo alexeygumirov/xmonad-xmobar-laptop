@@ -1,187 +1,255 @@
 #!/bin/sh
 
-DISPLAYS="1:  (Master)
-2:  (Master) +  (HDMI)
-3:  (HDMI)
-4:  (HDMI, Master) +  
-5: 來 (Mirror)
-6: Manual configuration"
+displays="1:  
+2:   
+3:       
+4:      
+5:       
+6:       
+7: 來 (mirror)
+8: Manual configuration"
 
-SELECTED=$(printf '%b' "${DISPLAYS}" | rofi -dmenu -fn 'Hack Nerd Font-16' -p ' ' -l 6 -location 0 -yoffset -150 -i -width 400)
-
-HDMI_CONNECTED=$(cat /sys/devices/pci0000:00/0000:00:08.1/0000:05:00.0/drm/card0/card0-HDMI-A-1/status)
-DP1_CONNECTED=$(cat /sys/devices/pci0000:00/0000:00:08.1/0000:05:00.0/drm/card0/card0-DP-1/status)
-DP2_CONNECTED=$(cat /sys/devices/pci0000:00/0000:00:08.1/0000:05:00.0/drm/card0/card0-DP-2/status)
-LID_STATE=$(cat /proc/acpi/button/lid/LID/state | cut -d':' -f2 | tr -d ' ')
-DISPLAY_NAME="none"
-
-if [ "${HDMI_CONNECTED}" = "connected" ]
+if [ -z "${1}" ]
 then
-    DISPLAY_NAME="HDMI-A-0"
-elif [ "${DP1_CONNECTED}" = "connected" ]
-then
-    DISPLAY_NAME="DisplayPort-0"
-elif [ "${DP2_CONNECTED}" = "connected" ]
-then
-    DISPLAY_NAME="DisplayPort-1"
+    selected=$(printf '%b' "${displays}" | rofi -dmenu -fn 'Hack Nerd Font-16' -p ' ' -l 8 -location 0 -yoffset -150 -i -theme-str 'window { width: 400px; }')
+    selected_num=${selected%:*}
+else
+    selected_num=$1
 fi
+
+lid_state=$(cat /proc/acpi/button/lid/LID/state | cut -d':' -f2 | tr -d ' ')
+primary_display="eDP-1"
+hdmi_display="HDMI-1"
+secondary_dp="DP-"
+display_name=$(xrandr -q | grep ' connected' | grep -v "${primary_display}" | cut -d' ' -f1)
+
+if [ -z "${display_name}" ]
+then
+    display_name="none"
+fi
+
 
 twm_update(){
     case "$XDG_SESSION_DESKTOP" in
-        "qtile") qtile-cmd -o cmd -f restart 2> /dev/null & ;;
+        # Qtile has built-in hook, hence this command is not needed anymore.
+        # "qtile") qtile-cmd -o cmd -f restart 2> /dev/null & ;;
         "xmonad") xmonad --restart & ;;
     esac
+    nitrogen --restore --set-zoom &
+}
+
+dpms_set(){
     xset s off
     xset s noblank
-    xset dpms 600 1200 2400
-    nitrogen --restore &
-    setxkbmap us,ru,de -option -option 'grp:rshift_toggle,caps:ctrl_modifier'
+    case "${1}" in
+        "off") xset s off -dpms ;;
+        *) xset dpms 600 1200 2400 ;;
+    esac
 }
 
 default_screen(){
-    xrandr --output eDP --primary --auto --output HDMI-A-0 --off --output DisplayPort-0 --off --output DisplayPort-1 --off
-    printf " \n" > /tmp/displaymode
+    if [ "${1}" = "none" ]
+    then
+        xrandr --output "${primary_display}" --primary --auto
+    else
+        xrandr --output "${primary_display}" --primary --auto --output "${1}" --off
+    fi
+    printf "\n" > /tmp/displaymode
     printf "default\n" >> /tmp/displaymode
     printf "" > /tmp/display_num
 }
 
 display_only(){
-    local DISPLAY_WRITTEN=$(cat /tmp/displayname)
-    local CURRENT_MODE=$(tail -n1 /tmp/displaymode)
-    if [ "${DISPLAY_WRITTEN}" != "${DISPLAY_NAME}" -o "${CURRENT_MODE}" != "HDMI" ]; then
-        case "${DISPLAY_NAME}" in
-            "HDMI-A-0")
-                xrandr --output eDP --off --output HDMI-A-0 --primary --auto --output DisplayPort-0 --off --output DisplayPort-1 --off
-                printf "${DISPLAY_NAME}" > /tmp/displayname
+    local display_written=$(cat /tmp/displayname)
+    local current_mode=$(tail -n1 /tmp/displaymode)
+    if [ "${display_written}" != "${1}" -o "${current_mode}" != "HDMI" ]; then
+        case "${1}" in
+            "${hdmi_display}")
+                xrandr --output "${primary_display}" --off --output "${hdmi_display}" --primary --auto
+                printf "${1}" > /tmp/displayname
                 ;;
-            "DisplayPort-0")
-                xrandr --output eDP --off --output HDMI-A-0 --off --output DisplayPort-0 --primary --auto --output DisplayPort-1 --off
-                printf "${DISPLAY_NAME}" > /tmp/displayname
-                ;;
-            "DisplayPort-1")
-                xrandr --output eDP --off --output HDMI-A-0 --off --output DisplayPort-0 --off --output DisplayPort-1 --primary --auto
-                printf "${DISPLAY_NAME}" > /tmp/displayname
+            "${secondary_dp}"*)
+                xrandr --output "${primary_display}" --off --output "${hdmi_display}" --off --output "${1}" --primary --auto
+                printf "${1}" > /tmp/displayname
                 ;;
         esac
-        printf " \n" > /tmp/displaymode
+        printf " \n" > /tmp/displaymode
         printf "HDMI\n" >> /tmp/displaymode
         printf "" > /tmp/display_num
     fi
 }
 
-case ${SELECTED%:*} in
+case $selected_num in
     1)
-        case "${LID_STATE}" in
+        case "${lid_state}" in
             "open")
-                default_screen
+                default_screen "${display_name}"
+                dpms_set
                 ;;
             "closed")
-                display_only
+                display_only "${display_name}"
+                dpms_set off
                 ;;
         esac
         ;;
     2)
-        case "${LID_STATE}" in
+        display_only "${display_name}"
+        dpms_set off
+        ;;
+    3)
+        case "${lid_state}" in
             "open")
-                DISPLAY_WRITTEN=$(cat /tmp/displayname)
-                CURRENT_MODE=$(tail -n1 /tmp/displaymode)
-                if [ "${DISPLAY_WRITTEN}" != "${DISPLAY_NAME}" -o "${CURRENT_MODE}" != "eDP-HDMI" ]; then
-                    case "${DISPLAY_NAME}" in
-                        "HDMI-A-0")
-                            xrandr --output eDP --primary --auto --output HDMI-A-0 --auto --right-of eDP --output DisplayPort-0 --off --output DisplayPort-1 --off
-                            printf "${DISPLAY_NAME}" > /tmp/displayname
+                display_written=$(cat /tmp/displayname)
+                current_mode=$(tail -n1 /tmp/displaymode)
+                if [ "${display_written}" != "${display_name}" -o "${current_mode}" != "eDP.m-HDMI" ]; then
+                    case "${display_name}" in
+                        "${hdmi_display}")
+                            xrandr --output "${primary_display}" --primary --auto --output "${hdmi_display}" --auto --right-of "${primary_display}"
+                            printf "${display_name}" > /tmp/displayname
                             ;;
-                        "DisplayPort-0")
-                            xrandr --output eDP --primary --auto --output HDMI-A-0 --off --output DisplayPort-0 --auto --right-of eDP --output DisplayPort-1 --off
-                            printf "${DISPLAY_NAME}" > /tmp/displayname
-                            ;;
-                        "DisplayPort-1")
-                            xrandr --output eDP --primary --auto --output HDMI-A-0 --off --output DisplayPort-0 --off --output DisplayPort-1 --auto --right-of eDP
-                            printf "${DISPLAY_NAME}" > /tmp/displayname
+                        "${secondary_dp}"*)
+                            xrandr --output "${primary_display}" --primary --auto --output "${hdmi_display}" --off --output "${display_name}" --auto --right-of "${primary_display}"
+                            printf "${display_name}" > /tmp/displayname
                             ;;
                     esac
-                    printf "*  \n" > /tmp/displaymode
-                    printf "eDP-HDMI\n" >> /tmp/displaymode
-                    printf "\n" > /tmp/display_num
-                    printf "\n" >> /tmp/display_num
+                    printf "\n" > /tmp/displaymode
+                    printf "eDP.m-HDMI\n" >> /tmp/displaymode
+                    printf " \n" > /tmp/display_num
+                    printf " \n" >> /tmp/display_num
                 fi
+                dpms_set off
                 ;;
             "closed")
-                display_only
+                display_only "${display_name}"
+                dpms_set off
                 ;;
         esac
         ;;
-    3)
-        display_only
-        ;;
     4)
-        case "${LID_STATE}" in
+        case "${lid_state}" in
             "open")
-                DISPLAY_WRITTEN=$(cat /tmp/displayname)
-                CURRENT_MODE=$(tail -n1 /tmp/displaymode)
-                if [ "${DISPLAY_WRITTEN}" != "${DISPLAY_NAME}" -o "${CURRENT_MODE}" != "HDMI-eDP" ]; then
-                    case "${DISPLAY_NAME}" in
-                        "HDMI-A-0")
-                            xrandr --output eDP --auto --right-of HDMI-A-0 --output HDMI-A-0 --primary --auto --output DisplayPort-0 --off --output DisplayPort-1 --off
-                            printf "${DISPLAY_NAME}" > /tmp/displayname
+                display_written=$(cat /tmp/displayname)
+                current_mode=$(tail -n1 /tmp/displaymode)
+                if [ "${display_written}" != "${display_name}" -o "${current_mode}" != "HDMI-eDP.m" ]; then
+                    case "${display_name}" in
+                        "${hdmi_display}")
+                            xrandr --output "${primary_display}" --primary --auto --output "${hdmi_display}" --auto --left-of "${primary_display}"
+                            printf "${display_name}" > /tmp/displayname
                             ;;
-                        "DisplayPort-0")
-                            xrandr --output eDP --auto --right-of DisplayPort-0 --output HDMI-A-0 --off --output DisplayPort-0 --primary --auto --output DisplayPort-1 --off
-                            printf "${DISPLAY_NAME}" > /tmp/displayname
-                            ;;
-                        "DisplayPort-1")
-                            xrandr --output eDP --auto --right-of DisplayPort-1 --output HDMI-A-0 --off --output DisplayPort-0 --off --output DisplayPort-1 --primary --auto
-                            printf "${DISPLAY_NAME}" > /tmp/displayname
+                        "${secondary_dp}"*)
+                            xrandr --output "${primary_display}" --primary --auto--output "${display_name}" --auto --left-of "${primary_display}" --output "${hdmi_display}" --off 
+                            printf "${display_name}" > /tmp/displayname
                             ;;
                     esac
-                    printf "*  \n" > /tmp/displaymode
-                    printf "HDMI-eDP\n" >> /tmp/displaymode
-                    printf "\n" > /tmp/display_num
-                    printf "\n" >> /tmp/display_num
+                    printf "\n" > /tmp/displaymode
+                    printf "HDMI-eDP.m\n" >> /tmp/displaymode
+                    printf " \n" > /tmp/display_num
+                    printf " \n" >> /tmp/display_num
                 fi
+                dpms_set off
                 ;;
             "closed")
-                display_only
+                display_only "${display_name}"
+                dpms_set off
+                ;;
+        esac
+        ;;
+    5)
+        case "${lid_state}" in
+            "open")
+                display_written=$(cat /tmp/displayname)
+                current_mode=$(tail -n1 /tmp/displaymode)
+                if [ "${display_written}" != "${display_name}" -o "${current_mode}" != "HDMI.m-eDP" ]; then
+                    case "${display_name}" in
+                        "${hdmi_display}")
+                            xrandr --output "${primary_display}" --auto --right-of "${hdmi_display}" --output "${hdmi_display}" --primary --auto
+                            printf "${display_name}" > /tmp/displayname
+                            ;;
+                        "${secondary_dp}"*)
+                            xrandr --output "${primary_display}" --auto --right-of "${display_name}" --output "${hdmi_display}" --off --output "${display_name}" --primary --auto 
+                            printf "${display_name}" > /tmp/displayname
+                            ;;
+                    esac
+                    printf "\n" > /tmp/displaymode
+                    printf "HDMI.m-eDP\n" >> /tmp/displaymode
+                    printf " \n" > /tmp/display_num
+                    printf " \n" >> /tmp/display_num
+                fi
+                dpms_set off
+                ;;
+            "closed")
+                display_only "${display_name}"
+                dpms_set off
                 ;;
         esac
         ;; 
-    5)
-        case "${LID_STATE}" in
+    6)
+        case "${lid_state}" in
             "open")
-                DISPLAY_WRITTEN=$(cat /tmp/displayname)
-                CURRENT_MODE=$(tail -n1 /tmp/displaymode)
-                if [ "${DISPLAY_WRITTEN}" != "${DISPLAY_NAME}" -o "${CURRENT_MODE}" != "eDP-HDMI-Mirror" ]; then
-                    case "${DISPLAY_NAME}" in
-                        "HDMI-A-0")
-                            xrandr --output eDP --primary --auto --output HDMI-A-0 --auto --same-as eDP --output DisplayPort-0 --off --output DisplayPort-1 --off
-                            printf "${DISPLAY_NAME}" > /tmp/displayname
+                display_written=$(cat /tmp/displayname)
+                current_mode=$(tail -n1 /tmp/displaymode)
+                if [ "${display_written}" != "${display_name}" -o "${current_mode}" != "eDP-HDMI.m" ]; then
+                    case "${display_name}" in
+                        "${hdmi_display}")
+                            xrandr --output "${hdmi_display}" --primary --auto --output "${primary_display}" --auto --left-of "${hdmi_display}" 
+                            printf "${display_name}" > /tmp/displayname
                             ;;
-                        "DisplayPort-0")
-                            xrandr --output eDP --primary --auto --output HDMI-A-0 --off --output DisplayPort-0 --auto --same-as eDP --output DisplayPort-1 --off
-                            printf "${DISPLAY_NAME}" > /tmp/displayname
-                            ;;
-                        "DisplayPort-1")
-                            xrandr --output eDP --primary --auto --output HDMI-A-0 --off --output DisplayPort-0 --off --output DisplayPort-1 --auto --same-as eDP
-                            printf "${DISPLAY_NAME}" > /tmp/displayname
+                        "${secondary_dp}"*)
+                            xrandr --output "${display_name}" --primary --auto --output "${primary_display}" --auto --left-of "${display_name}" --output "${hdmi_display}" --off 
+                            printf "${display_name}" > /tmp/displayname
                             ;;
                     esac
-                    printf "來\n" > /tmp/displaymode
+                    printf "\n" > /tmp/displaymode
+                    printf "eDP-HDMI.m\n" >> /tmp/displaymode
+                    printf " \n" > /tmp/display_num
+                    printf " \n" >> /tmp/display_num
+                fi
+                dpms_set off
+                ;;
+            "closed")
+                display_only "${display_name}"
+                dpms_set off
+                ;;
+        esac
+        ;; 
+    7)
+        case "${lid_state}" in
+            "open")
+                display_written=$(cat /tmp/displayname)
+                current_mode=$(tail -n1 /tmp/displaymode)
+                if [ "${display_written}" != "${display_name}" -o "${current_mode}" != "eDP-HDMI-Mirror" ]; then
+                    case "${display_name}" in
+                        "${hdmi_display}")
+                            xrandr --output "${primary_display}" --primary --auto --output "${hdmi_display}" --auto --same-as "${primary_display}"
+                            printf "${display_name}" > /tmp/displayname
+                            ;;
+                        "${secondary_dp}"*)
+                            xrandr --output "${primary_display}" --primary --auto --output "${hdmi_display}" --off --output "${display_name}" --auto --same-as "${primary_display}"
+                            printf "${display_name}" > /tmp/displayname
+                            ;;
+                    esac
+                    printf "來 \n" > /tmp/displaymode
                     printf "eDP-HDMI-Mirror\n" >> /tmp/displaymode
                     printf "" > /tmp/display_num
                 fi
+                dpms_set off
                 ;;
             "closed")
-                display_only
+                display_only "${display_name}"
+                dpms_set off
                 ;;
         esac
+        killall xmobar
         ;;
-    6)
+    8)
         arandr
-        printf "? \n" > /tmp/displaymode
+        dpms_set off
+        printf "?\n" > /tmp/displaymode
         printf "other\n" >> /tmp/displaymode
         printf "other" > /tmp/displayname
-        printf "\n" > /tmp/display_num
-        printf "\n" >> /tmp/display_num
+        printf " \n" > /tmp/display_num
+        printf " \n" >> /tmp/display_num
+        dpms_set off
         exit 0
         ;;
     # *)
