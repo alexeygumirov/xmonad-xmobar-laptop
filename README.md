@@ -1,3 +1,13 @@
+# 👋 THIS REPOSITORY HAS MOVED! 👋
+
+**This repository is no longer actively maintained on GitHub. It has been archived and is read-only.**
+
+Please update your bookmarks and remotes to the new home on Codeberg:
+
+➡️ **[https://codeberg.org/alexeygumirov/xmonad-xmobar-config](https://codeberg.org/alexeygumirov/xmonad-xmobar-config)** ⬅️
+
+Thank you for your understanding and continued support!
+
 # Xmonad and Xmobar setup for laptop
 
 Here I publish my Xmonad and Xmobar setup for the laptop.
